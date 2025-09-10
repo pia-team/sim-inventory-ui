@@ -1,0 +1,280 @@
+{
+  "app": {
+    "title": "SIM Inventory Management",
+    "welcome": "Welcome, {{name}}!",
+    "loading": "Loading...",
+    "error": "An error occurred."
+  },
+  "createSim": {
+    "title": "Create New SIM Resource",
+    "basicInformation": "Basic Information",
+    "iccidRequired": "ICCID is required",
+    "iccidDigits": "ICCID must be 19-20 digits",
+    "iccidChecksum": "Invalid ICCID checksum",
+    "simType": "SIM Type",
+    "simTypeRequired": "SIM type is required",
+    "selectSimType": "Select SIM type",
+    "profileType": "Profile Type",
+    "selectProfileType": "Select profile type (optional)",
+    "batchId": "Batch ID",
+    "batchIdHelp": "Optional batch identifier for grouping SIMs",
+    "name": "Name",
+    "nameHelp": "Optional human-readable name for the SIM",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter description (optional)",
+    "additionalCharacteristics": "Additional Characteristics",
+    "additionalHelp": "Enter additional characteristics as key-value pairs, one per line.",
+    "characteristicsLabel": "Resource Characteristics",
+    "characteristicsExample": "manufacturer: Gemalto\nregion: EU\nactivation_code: ABC123",
+    "cancel": "Cancel",
+    "submit": "Create SIM Resource"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "simResources": "Ressources SIM",
+    "orders": "Commandes",
+    "reports": "Rapports",
+    "profile": "Profil",
+    "logout": "Déconnexion",
+    "settings": "Paramètres",
+    "viewAll": "Tout afficher",
+    "createNew": "Créer nouveau",
+    "batchImport": "Import par lot",
+    "bulkTemplate": "Création en masse (Modèle)"
+  },
+  "actions": {
+    "add": "Ajouter",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "activate": "Activer",
+    "suspend": "Suspendre",
+    "terminate": "Résilier",
+    "release": "Libérer",
+    "retire": "Retirer",
+    "view": "Voir",
+    "update": "Mettre à jour"
+  },
+  "sim": {
+    "iccid": "ICCID",
+    "imsi": "IMSI",
+    "type": "Type",
+    "status": "Statut",
+    "created": "Créé",
+    "lastModified": "Dernière modification",
+    "profileType": "Type de profil",
+    "batchId": "ID de lot",
+    "statusValues": {
+      "available": "Disponible",
+      "allocated": "Attribuée",
+      "active": "Active",
+      "suspended": "Suspendue",
+      "terminated": "Résiliée",
+      "retired": "Retirée"
+    }
+  },
+  "order": {
+    "createNew": "Créer une nouvelle commande",
+    "orderId": "ID de commande",
+    "status": "Statut",
+    "items": "Articles",
+    "orderDate": "Date de commande",
+    "requestedStartDate": "Date de début demandée",
+    "requestedCompletionDate": "Date de fin demandée",
+    "notes": "Notes",
+    "priority": "Priorité",
+    "expectedCompletion": "Achèvement prévu",
+    "requestedStart": "Début demandé",
+    "completionDate": "Date d'achèvement",
+    "totalItems": "Nombre total d'articles",
+    "externalId": "ID externe",
+    "columns": {
+      "resource": "Ressource",
+      "action": "Action",
+      "resourceStatus": "Statut de la ressource",
+      "quantity": "Quantité",
+      "state": "État",
+      "actions": "Actions"
+    },
+    "timeline": {
+      "created": "Commande créée"
+    }
+  },
+  "messages": {
+    "success": "Opération terminée avec succès.",
+    "areYouSure": "Êtes-vous sûr ?",
+    "confirmDelete": "Cette action est irréversible.",
+    "confirmDeleteSim": "Voulez-vous vraiment supprimer la SIM {{iccid}} ? Cette action est irréversible.",
+    "confirmActionSimResource": "Voulez-vous vraiment {{action}} cette ressource SIM ?",
+    "simNotFound": "Ressource SIM introuvable",
+    "orderNotFound": "Commande introuvable",
+    "confirmCancelOrder": "Voulez-vous vraiment annuler la commande {{id}} ?",
+    "orderCancelled": "Commande annulée avec succès"
+  },
+  "titles": {
+    "simResourceDetails": "Détails de la ressource SIM",
+    "basicInformation": "Informations de base",
+    "resourceCharacteristics": "Caractéristiques de la ressource",
+    "relatedResources": "Ressources liées",
+    "activityHistory": "Historique des activités",
+    "editSimResource": "Modifier la ressource SIM",
+    "deleteSimResource": "Supprimer la ressource SIM",
+    "orderDetails": "Détails de la commande",
+    "orderInformation": "Informations sur la commande",
+    "orderItems": "Éléments de la commande",
+    "notes": "Notes",
+    "orderTimeline": "Chronologie de la commande",
+    "relatedParties": "Parties liées",
+    "quickActions": "Actions rapides",
+    "cancelOrder": "Annuler la commande"
+  },
+  "common": {
+    "back": "Retour",
+    "description": "Description",
+    "reasonOptional": "Motif (facultatif)",
+    "actions": "Actions",
+    "filters": "Filtres",
+    "refresh": "Actualiser",
+    "cancel": "Annuler"
+  },
+  "buttons": {
+    "viewSimResources": "Voir les ressources SIM",
+    "startNewImport": "Commencer un nouvel import",
+    "downloadSampleCsv": "Télécharger un exemple CSV",
+    "importAnotherBatch": "Importer un autre lot",
+    "submitBulkJob": "Soumettre la tâche groupée",
+    "exportCsv": "Exporter CSV",
+    "addSim": "Ajouter une SIM",
+    "batchImport": "Import par lot",
+    "createOrder": "Créer une commande",
+    "import": "Importer",
+    "createSimilarOrder": "Créer une commande similaire",
+    "viewAllOrders": "Voir toutes les commandes"
+  },
+  "placeholders": {
+    "searchByIccid": "Rechercher par ICCID",
+    "searchByImsi": "Rechercher par IMSI",
+    "searchOrders": "Rechercher des commandes..."
+  },
+  "filters": {
+    "status": "Statut",
+    "type": "Type",
+    "batchId": "ID de lot",
+    "createdFrom": "Créé à partir de",
+    "createdTo": "Créé jusqu'au",
+    "imsi": "IMSI",
+    "orderFrom": "Commande à partir de",
+    "orderTo": "Commande jusqu'au"
+  },
+  "batchImport": {
+    "title": "Batch Import SIM Resources",
+    "steps": {
+      "uploadFile": "Upload File",
+      "reviewData": "Review Data",
+      "importResults": "Import Results"
+    },
+    "upload": {
+      "sectionTitle": "Upload CSV File",
+      "selectFile": "Select CSV file to import",
+      "dragText": "Upload CSV",
+      "dragHint": "Only CSV files are supported. Maximum file size: 10MB"
+    },
+    "sample": {
+      "title": "Sample CSV Format"
+    },
+    "bulk": {
+      "jobSubmitted": "Bulk Job Submitted",
+      "jobSubmittedDesc": "The bulk create job has been submitted to the server. Review the response below.",
+      "responseTitle": "Bulk Job Response",
+      "eligibilityTitle": "Bulk Eligibility",
+      "eligibleDesc": "ICCID set is eligible for mask-based bulk creation.",
+      "notEligible": "Not eligible for bulk template",
+      "notEligibleDesc": "Please check CSV data"
+    },
+    "metrics": {
+      "totalRecords": "Total Records",
+      "validRecords": "Valid Records",
+      "invalidRecords": "Invalid Records"
+    },
+    "validation": {
+      "title": "Data Validation Issues",
+      "description": "{{count}} records have validation errors. Please review and fix the issues before importing."
+    },
+    "preview": {
+      "title": "Data Preview",
+      "columns": {
+        "line": "Line",
+        "iccid": "ICCID",
+        "type": "Type",
+        "profileType": "Profile Type",
+        "status": "Status",
+        "errors": "Errors",
+        "error": "Error"
+      }
+    },
+    "form": {
+      "batchId": "Batch ID",
+      "batchIdRequired": "Batch ID is required",
+      "batchIdHelp": "Unique identifier for this import batch",
+      "descriptionHelp": "Import batch description (optional)",
+      "useBulkTemplate": "Use Swagger Bulk Create (Template)",
+      "baseName": "Base Resource Name",
+      "baseNameRequired": "Base name is required for bulk job"
+    },
+    "eligibility": {
+      "type": "Type",
+      "commonPrefix": "Common Prefix",
+      "variableLength": "Variable Length",
+      "from": "From",
+      "to": "To",
+      "mask": "Mask",
+      "profileType": "ProfileType"
+    },
+    "result": {
+      "title": "Import Completed",
+      "description": "Successfully imported {{success}} out of {{total}} SIM resources.",
+      "failedTitle": "Failed Imports",
+      "totalProcessed": "Total Processed",
+      "successful": "Successful",
+      "failed": "Failed",
+      "batchId": "Batch ID"
+    }
+  },
+  "dashboard": {
+    "totalSims": "Nombre total de SIM",
+    "available": "Disponibles",
+    "active": "Actives",
+    "issues": "Problèmes",
+    "statusDistribution": "Répartition du statut des SIM",
+    "recentBatches": "Lots récents",
+    "recentSimActivity": "Activité SIM récente",
+    "recentOrders": "Commandes récentes",
+    "noBatch": "Aucun lot"
+  },
+  "reports": {
+    "exportReport": "Exporter le rapport",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "selectBatch": "Sélectionner un lot",
+    "applyFilters": "Appliquer les filtres",
+    "distribution": "Répartition",
+    "statusDistribution": "Répartition des statuts",
+    "simTypeDistribution": "Répartition par type de SIM",
+    "batchAnalysis": "Analyse des lots",
+    "ofBatches": "sur {{total}} lots",
+    "recentActivityLast7Days": "Activité récente (7 derniers jours)",
+    "noRecentActivity": "Aucune activité récente trouvée",
+    "totalBatches": "Nombre total de lots",
+    "utilizationRate": "Taux d'utilisation",
+    "utilizationHint": "Pourcentage de SIM actives",
+    "issueRate": "Taux d'incident",
+    "issueHint": "Pourcentage de SIM suspendues/résilées"
+  },
+  "lang": {
+    "en": "English",
+    "tr": "Turkish",
+    "de": "German",
+    "fr": "French"
+  }
+}

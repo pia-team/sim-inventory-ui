@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Silent Check SSO</title>
+</head>
+<body>
+    <script>
+      // Minimal snippet recommended for Keycloak silent SSO
+      (function () {
+        try {
+          var url = window.location.href; // send string, not Location object
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage(url, window.location.origin);
+          }
+        } catch (e) {
+          // Fallback in case origin check fails
+          try { window.parent.postMessage(window.location.href, '*'); } catch (_) {}
+        }
+      })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+import React, { useState, useCallback } from 'react';
+import {
+  Table,
+  Card,
+  Button,
+  Input,
+  Select,
+  Space,
+  Tag,
+  Dropdown,
+  Modal,
+  message,
+  Row,
+  Col,
+  DatePicker,
+  Typography,
+} from 'antd';
+import {
+  SearchOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  ExportOutlined,
+  FilterOutlined,
+  EyeOutlined,
+  StopOutlined,
+} from '@ant-design/icons';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useNavigate } from 'react-router-dom';
+import { CSVLink } from 'react-csv';
+import apiService from '../../services/api.service';
+import { SimOrder, OrderStatus } from '../../types/sim.types';
+import { useKeycloak } from '../../contexts/KeycloakContext';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useTranslation } from 'react-i18next';
+
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const { Title } = Typography;
+
+const SimOrderList: React.FC = () => {
+  const navigate = useNavigate();
+  const { hasRole } = useKeycloak();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  const [searchParams, setSearchParams] = useState<{
+    status?: string[];
+    limit?: number;
+    offset?: number;
+    sort?: string;
+  }>({
+    limit: 20,
+    offset: 0,
+    sort: 'orderDate',
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [filterVisible, setFilterVisible] = useState(false);
+
+  // Fetch SIM orders
+  const { data: response, isLoading, refetch } = useQuery(
+    ['simOrders', searchParams, currentPage, pageSize],
+    () => apiService.getSimOrders({
+      ...searchParams,
+      limit: pageSize,
+      offset: (currentPage - 1) * pageSize,
+    }),
+    {
+      keepPreviousData: true,
+    }
+  );
+
+  // Cancel order mutation
+  const cancelMutation = useMutation(
+    (id: string) => apiService.cancelSimOrder(id),
+    {
+      onSuccess: () => {
+        message.success(t('messages.orderCancelled'));
+        queryClient.invalidateQueries('simOrders');
+      },
+      onError: (error: any) => {
+        message.error(`${t('app.error')}: ${error.response?.data?.message || error.message}`);
+      },
+    }
+  );
+
+  const orders = response?.data?.data || [];
+  const totalCount = response?.data?.totalCount || 0;
+
+  const handleSearch = useCallback((value: string) => {
+    // For orders, we might search by ID or description
+    setSearchParams(prev => ({
+      ...prev,
+      // Add search functionality when API supports it
+    }));
+    setCurrentPage(1);
+  }, []);
+
+  const handleFilterChange = (field: string, value: any) => {
+    setSearchParams(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+    setCurrentPage(1);
+  };
+
+  const handleCancelOrder = (order: SimOrder) => {
+    Modal.confirm({
+      title: t('titles.cancelOrder'),
+      content: t('messages.confirmCancelOrder', { id: order.id.substring(0, 8) }),
+      onOk: () => cancelMutation.mutate(order.id),
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    const s = String(status || '').toLowerCase();
+    const map: Record<string, string> = {
+      pending: 'blue',
+      inprogress: 'orange',
+      'in progress': 'orange',
+      acknowledged: 'gold',
+      completed: 'green',
+      failed: 'red',
+      cancelled: 'default',
+      partial: 'purple',
+      rejected: 'red',
+      held: 'volcano',
+    };
+    return map[s] || 'default';
+  };
+
+  const getDisplayState = (order: SimOrder) => (order.status as any) || (order as any).state || 'Pending';
+  const isPending = (order: SimOrder) => {
+    const s = String(getDisplayState(order)).toLowerCase();
+    return s === 'pending' || s === 'acknowledged';
+  };
+
+  const getOrderActions = (order: SimOrder) => {
+    const actions = [
+      {
+        key: 'view',
+        label: t('actions.view'),
+        icon: <EyeOutlined />,
+        onClick: () => navigate(`/sim-orders/${order.id}`),
+      },
+    ];
+
+    if (isPending(order) && hasRole('sim_admin')) {
+      actions.push({
+        key: 'cancel',
+        label: t('titles.cancelOrder'),
+        icon: <StopOutlined />,
+        onClick: () => handleCancelOrder(order),
+      });
+    }
+
+    return actions;
+  };
+
+  const columns = [
+    {
+      title: t('order.orderId'),
+      dataIndex: 'id',
+      key: 'id',
+      width: 120,
+      render: (id: string) => (
+        <Button
+          type="link"
+          onClick={() => navigate(`/sim-orders/${id}`)}
+          style={{ padding: 0, fontFamily: 'monospace' }}
+        >
+          {id.substring(0, 8)}...
+        </Button>
+      ),
+    },
+    {
+      title: t('order.status'),
+      dataIndex: 'status',
+      key: 'status',
+      width: 140,
+      render: (_: any, record: SimOrder) => {
+        const st = getDisplayState(record) as string;
+        return (
+          <Tag color={getStatusColor(st)}>
+            {st}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: t('order.items'),
+      dataIndex: 'orderItem',
+      key: 'orderItem',
+      width: 80,
+      render: (items: any[]) => items?.length || 0,
+    },
+    {
+      title: t('common.description'),
+      dataIndex: 'description',
+      key: 'description',
+      ellipsis: true,
+      render: (description: string) => description || '-',
+    },
+    {
+      title: t('order.priority'),
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 100,
+      render: (priority: string) => {
+        const colors = {
+          high: 'red',
+          medium: 'orange',
+          low: 'blue',
+        };
+        return priority ? (
+          <Tag color={colors[priority as keyof typeof colors] || 'default'}>
+            {priority}
+          </Tag>
+        ) : '-';
+      },
+    },
+    {
+      title: t('order.orderDate'),
+      dataIndex: 'orderDate',
+      key: 'orderDate',
+      width: 150,
+      render: (date: string) => new Date(date).toLocaleString(),
+    },
+    {
+      title: t('order.expectedCompletion'),
+      dataIndex: 'expectedCompletionDate',
+      key: 'expectedCompletionDate',
+      width: 150,
+      render: (date: string) => date ? new Date(date).toLocaleString() : '-',
+    },
+    {
+      title: t('common.actions'),
+      key: 'actions',
+      width: 80,
+      render: (_: any, record: SimOrder) => {
+        const actions = getOrderActions(record);
+        const items = actions.map(a => ({ key: a.key, label: a.label, icon: a.icon, danger: (a as any).danger }));
+        const onClick = ({ key }: { key: string }) => {
+          const found = actions.find(a => a.key === key);
+          (found as any)?.onClick?.();
+        };
+        return (
+          <Dropdown
+            menu={{ items, onClick }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button type="text" icon={<EyeOutlined />} size="small" />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  const csvData = orders.map(order => ({
+    OrderID: order.id,
+    Status: order.status,
+    ItemCount: order.orderItem?.length || 0,
+    Description: order.description || '',
+    Priority: order.priority || '',
+    OrderDate: new Date(order.orderDate).toISOString(),
+    ExpectedCompletion: order.expectedCompletionDate ? new Date(order.expectedCompletionDate).toISOString() : '',
+    CompletionDate: order.completionDate ? new Date(order.completionDate).toISOString() : '',
+  }));
+
+  if (isLoading && !response) {
+    return <LoadingSpinner />;
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={2}>{t('nav.orders')}</Title>
+        
+        <Row gutter={[16, 16]} align="middle">
+          <Col flex="auto">
+            <Space wrap>
+              <Input.Search
+                placeholder={t('placeholders.searchOrders')}
+                style={{ width: 250 }}
+                onSearch={handleSearch}
+                enterButton={<SearchOutlined />}
+              />
+              
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFilterVisible(!filterVisible)}
+              >
+                {t('common.filters')}
+              </Button>
+              
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => refetch()}
+                loading={isLoading}
+              >
+                {t('common.refresh')}
+              </Button>
+            </Space>
+          </Col>
+          
+          <Col>
+            <Space>
+              <CSVLink
+                data={csvData}
+                filename={`sim-orders-${new Date().toISOString().split('T')[0]}.csv`}
+              >
+                <Button icon={<ExportOutlined />}>
+                  {t('buttons.exportCsv')}
+                </Button>
+              </CSVLink>
+              
+              {(hasRole('sim_user') || hasRole('sim_admin')) && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate('/sim-orders/create')}
+                >
+                  {t('buttons.createOrder')}
+                </Button>
+              )}
+            </Space>
+          </Col>
+        </Row>
+
+        {filterVisible && (
+          <Card style={{ marginTop: 16 }}>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} md={6}>
+                <Select
+                  placeholder="Status"
+                  style={{ width: '100%' }}
+                  mode="multiple"
+                  onChange={(value) => handleFilterChange('status', value.length ? value : undefined)}
+                  allowClear
+                >
+                  {Object.values(OrderStatus).map(status => (
+                    <Option key={status} value={status}>
+                      <Tag color={getStatusColor(status)}>{String(status)}</Tag>
+                    </Option>
+                  ))}
+                </Select>
+              </Col>
+              
+              <Col xs={24} sm={12} md={6}>
+                <RangePicker
+                  style={{ width: '100%' }}
+                  placeholder={[t('filters.orderFrom'), t('filters.orderTo')]}
+                  onChange={(dates) => {
+                    // Add date filtering when API supports it
+                  }}
+                />
+              </Col>
+            </Row>
+          </Card>
+        )}
+      </div>
+
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={orders}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            current: currentPage,
+            pageSize,
+            total: totalCount,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} of ${total} items`,
+            onChange: setCurrentPage,
+            onShowSizeChange: (current, size) => {
+              setCurrentPage(current);
+              setPageSize(size);
+            },
+          }}
+          scroll={{ x: 1000 }}
+        />
+      </Card>
+    </div>
+  );
+};
+
+export default SimOrderList;

@@ -1,0 +1,280 @@
+{
+  "app": {
+    "title": "SIM Envanter Yönetimi",
+    "welcome": "Hoş geldiniz, {{name}}!",
+    "loading": "Yükleniyor...",
+    "error": "Bir hata oluştu."
+  },
+  "createSim": {
+    "title": "Yeni SIM Kaynağı Oluştur",
+    "basicInformation": "Temel Bilgiler",
+    "iccidRequired": "ICCID zorunludur",
+    "iccidDigits": "ICCID 19-20 hane olmalıdır",
+    "iccidChecksum": "Geçersiz ICCID checksum",
+    "simType": "SIM Türü",
+    "simTypeRequired": "SIM türü zorunludur",
+    "selectSimType": "SIM türü seçin",
+    "profileType": "Profil Tipi",
+    "selectProfileType": "Profil tipi seçin (opsiyonel)",
+    "batchId": "Batch ID",
+    "batchIdHelp": "SIM’leri gruplamak için opsiyonel batch kimliği",
+    "name": "Ad",
+    "nameHelp": "SIM için opsiyonel okunabilir ad",
+    "description": "Açıklama",
+    "descriptionPlaceholder": "Açıklama girin (opsiyonel)",
+    "additionalCharacteristics": "Ek Özellikler",
+    "additionalHelp": "Ek özellikleri anahtar-değer çiftleri olarak, her satıra bir tane olacak şekilde girin.",
+    "characteristicsLabel": "Kaynak Özellikleri",
+    "characteristicsExample": "manufacturer: Gemalto\nregion: EU\nactivation_code: ABC123",
+    "cancel": "Vazgeç",
+    "submit": "SIM Kaynağı Oluştur"
+  },
+  "nav": {
+    "dashboard": "Gösterge Paneli",
+    "simResources": "SIM Kaynakları",
+    "orders": "Siparişler",
+    "reports": "Raporlar",
+    "profile": "Profil",
+    "logout": "Çıkış",
+    "settings": "Ayarlar",
+    "viewAll": "Tümünü Gör",
+    "createNew": "Yeni Oluştur",
+    "batchImport": "Toplu İçe Aktarma",
+    "bulkTemplate": "Toplu Oluştur (Şablon)"
+  },
+  "actions": {
+    "add": "Ekle",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "activate": "Aktifleştir",
+    "suspend": "Askıya Al",
+    "terminate": "Sonlandır",
+    "release": "Serbest Bırak",
+    "retire": "Emekli Et",
+    "view": "Görüntüle",
+    "update": "Güncelle"
+  },
+  "sim": {
+    "iccid": "ICCID",
+    "imsi": "IMSI",
+    "type": "Tür",
+    "status": "Durum",
+    "created": "Oluşturulma",
+    "lastModified": "Son Güncelleme",
+    "profileType": "Profil Tipi",
+    "batchId": "Batch ID",
+    "statusValues": {
+      "available": "Uygun",
+      "allocated": "Tahsis Edildi",
+      "active": "Aktif",
+      "suspended": "Askıda",
+      "terminated": "Sonlandırıldı",
+      "retired": "Emekli"
+    }
+  },
+  "order": {
+    "createNew": "Yeni Sipariş Oluştur",
+    "orderId": "Sipariş ID",
+    "status": "Durum",
+    "items": "Ögeler",
+    "orderDate": "Sipariş Tarihi",
+    "requestedStartDate": "Talep Başlangıç",
+    "requestedCompletionDate": "Talep Bitiş",
+    "notes": "Notlar",
+    "priority": "Öncelik",
+    "expectedCompletion": "Beklenen Tamamlanma",
+    "requestedStart": "Talep Başlangıç",
+    "completionDate": "Tamamlanma Tarihi",
+    "totalItems": "Toplam Kalem",
+    "externalId": "Harici ID",
+    "columns": {
+      "resource": "Kaynak",
+      "action": "İşlem",
+      "resourceStatus": "Kaynak Durumu",
+      "quantity": "Adet",
+      "state": "Durum",
+      "actions": "İşlemler"
+    },
+    "timeline": {
+      "created": "Sipariş Oluşturuldu"
+    }
+  },
+  "messages": {
+    "success": "İşlem başarıyla tamamlandı.",
+    "areYouSure": "Emin misiniz?",
+    "confirmDelete": "Bu işlem geri alınamaz.",
+    "confirmDeleteSim": "SIM {{iccid}} silinsin mi? Bu işlem geri alınamaz.",
+    "confirmActionSimResource": "Bu SIM kaynağı için {{action}} işlemini yapmak istediğinize emin misiniz?",
+    "simNotFound": "SIM Kaynağı Bulunamadı",
+    "orderNotFound": "Sipariş Bulunamadı",
+    "confirmCancelOrder": "{{id}} numaralı siparişi iptal etmek istediğinize emin misiniz?",
+    "orderCancelled": "Sipariş başarıyla iptal edildi"
+  },
+  "titles": {
+    "simResourceDetails": "SIM Kaynağı Detayları",
+    "basicInformation": "Temel Bilgiler",
+    "resourceCharacteristics": "Kaynak Özellikleri",
+    "relatedResources": "İlgili Kaynaklar",
+    "activityHistory": "Aktivite Geçmişi",
+    "editSimResource": "SIM Kaynağını Düzenle",
+    "deleteSimResource": "SIM Kaynağını Sil",
+    "orderDetails": "Sipariş Detayları",
+    "orderInformation": "Sipariş Bilgileri",
+    "orderItems": "Sipariş Kalemleri",
+    "notes": "Notlar",
+    "orderTimeline": "Sipariş Zaman Çizelgesi",
+    "relatedParties": "İlgili Taraflar",
+    "quickActions": "Hızlı İşlemler",
+    "cancelOrder": "Siparişi İptal Et"
+  },
+  "common": {
+    "back": "Geri",
+    "description": "Açıklama",
+    "reasonOptional": "Gerekçe (Opsiyonel)",
+    "actions": "İşlemler",
+    "filters": "Filtreler",
+    "refresh": "Yenile",
+    "cancel": "Vazgeç"
+  },
+  "buttons": {
+    "viewSimResources": "SIM Kaynaklarını Görüntüle",
+    "startNewImport": "Yeni İçe Aktarma Başlat",
+    "downloadSampleCsv": "Örnek CSV İndir",
+    "importAnotherBatch": "Başka Bir Partiyi İçe Aktar",
+    "submitBulkJob": "Toplu Görevi Gönder",
+    "exportCsv": "CSV Dışa Aktar",
+    "addSim": "SIM Ekle",
+    "batchImport": "Toplu İçe Aktarma",
+    "createOrder": "Sipariş Oluştur",
+    "import": "İçe Aktar",
+    "createSimilarOrder": "Benzer Sipariş Oluştur",
+    "viewAllOrders": "Tüm Siparişleri Gör"
+  },
+  "placeholders": {
+    "searchByIccid": "ICCID ile ara",
+    "searchByImsi": "IMSI ile ara",
+    "searchOrders": "Siparişlerde ara..."
+  },
+  "filters": {
+    "status": "Durum",
+    "type": "Tür",
+    "batchId": "Batch ID",
+    "createdFrom": "Oluşturma Başlangıç",
+    "createdTo": "Oluşturma Bitiş",
+    "imsi": "IMSI",
+    "orderFrom": "Sipariş Başlangıç",
+    "orderTo": "Sipariş Bitiş"
+  },
+  "batchImport": {
+    "title": "Toplu SIM Kaynağı İçe Aktarma",
+    "steps": {
+      "uploadFile": "Dosya Yükle",
+      "reviewData": "Veriyi İncele",
+      "importResults": "İçe Aktarma Sonuçları"
+    },
+    "upload": {
+      "sectionTitle": "CSV Dosyası Yükle",
+      "selectFile": "İçe aktarılacak CSV dosyasını seçin",
+      "dragText": "CSV Yükle",
+      "dragHint": "Yalnızca CSV dosyaları desteklenir. Maksimum dosya boyutu: 10MB"
+    },
+    "sample": {
+      "title": "Örnek CSV Formatı"
+    },
+    "bulk": {
+      "jobSubmitted": "Toplu Görev Gönderildi",
+      "jobSubmittedDesc": "Toplu oluşturma görevi sunucuya gönderildi. Aşağıdaki yanıtı inceleyin.",
+      "responseTitle": "Toplu Görev Yanıtı",
+      "eligibilityTitle": "Toplu Uygunluk",
+      "eligibleDesc": "ICCID kümesi maske tabanlı toplu oluşturma için uygundur.",
+      "notEligible": "Toplu şablon için uygun değil",
+      "notEligibleDesc": "Lütfen CSV verisini kontrol edin"
+    },
+    "metrics": {
+      "totalRecords": "Toplam Kayıt",
+      "validRecords": "Geçerli Kayıt",
+      "invalidRecords": "Geçersiz Kayıt"
+    },
+    "validation": {
+      "title": "Veri Doğrulama Sorunları",
+      "description": "{{count}} kayıt doğrulama hatalarına sahip. Lütfen içe aktarmadan önce sorunları inceleyip düzeltin."
+    },
+    "preview": {
+      "title": "Veri Önizleme",
+      "columns": {
+        "line": "Satır",
+        "iccid": "ICCID",
+        "type": "Tür",
+        "profileType": "Profil Tipi",
+        "status": "Durum",
+        "errors": "Hatalar",
+        "error": "Hata"
+      }
+    },
+    "form": {
+      "batchId": "Batch ID",
+      "batchIdRequired": "Batch ID zorunludur",
+      "batchIdHelp": "Bu içe aktarma partisi için benzersiz tanımlayıcı",
+      "descriptionHelp": "İçe aktarma parti açıklaması (opsiyonel)",
+      "useBulkTemplate": "Swagger Toplu Oluştur (Şablon) Kullan",
+      "baseName": "Temel Kaynak Adı",
+      "baseNameRequired": "Toplu görev için temel ad zorunludur"
+    },
+    "eligibility": {
+      "type": "Tür",
+      "commonPrefix": "Ortak Önek",
+      "variableLength": "Değişken Uzunluk",
+      "from": "Başlangıç",
+      "to": "Bitiş",
+      "mask": "Maske",
+      "profileType": "Profil Tipi"
+    },
+    "result": {
+      "title": "İçe Aktarma Tamamlandı",
+      "description": "Toplam {{total}} kaydın {{success}} tanesi başarıyla içe aktarıldı.",
+      "failedTitle": "Başarısız İçe Aktarmalar",
+      "totalProcessed": "Toplam İşlenen",
+      "successful": "Başarılı",
+      "failed": "Başarısız",
+      "batchId": "Batch ID"
+    }
+  },
+  "dashboard": {
+    "totalSims": "Toplam SIM",
+    "available": "Uygun",
+    "active": "Aktif",
+    "issues": "Sorunlar",
+    "statusDistribution": "SIM Durum Dağılımı",
+    "recentBatches": "Son Partiler",
+    "recentSimActivity": "Son SIM Aktivitesi",
+    "recentOrders": "Son Siparişler",
+    "noBatch": "Parti Yok"
+  },
+  "reports": {
+    "exportReport": "Raporu Dışa Aktar",
+    "startDate": "Başlangıç Tarihi",
+    "endDate": "Bitiş Tarihi",
+    "selectBatch": "Parti seçin",
+    "applyFilters": "Filtreleri Uygula",
+    "distribution": "Dağılım",
+    "statusDistribution": "Durum Dağılımı",
+    "simTypeDistribution": "SIM Türü Dağılımı",
+    "batchAnalysis": "Parti Analizi",
+    "ofBatches": "toplam {{total}} parti",
+    "recentActivityLast7Days": "Son 7 Günlük Aktivite",
+    "noRecentActivity": "Son aktivite bulunamadı",
+    "totalBatches": "Toplam Parti",
+    "utilizationRate": "Kullanım Oranı",
+    "utilizationHint": "Aktif SIM'lerin yüzdesi",
+    "issueRate": "Sorun Oranı",
+    "issueHint": "Askıda/sonlandırılmış SIM'lerin yüzdesi"
+  },
+  "lang": {
+    "en": "İngilizce",
+    "tr": "Türkçe",
+    "de": "Almanca",
+    "fr": "Fransızca"
+  }
+}
