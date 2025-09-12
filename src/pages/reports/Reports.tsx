@@ -27,6 +27,10 @@ import { SimType } from '../../types/sim.types';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
 
+// Helper to read a characteristic value (e.g., IMSI, BatchId)
+const getChar = (sim: any, key: string) =>
+  sim?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
+
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -50,7 +54,7 @@ const Reports: React.FC = () => {
     'recentActivity',
     () => apiService.getSimResources({ 
       limit: 100, 
-      sort: 'createdDate', 
+      sort: '-createdDate', 
     })
   );
 
@@ -76,12 +80,12 @@ const Reports: React.FC = () => {
   // Calculate status distribution percentages
   const totalSims = stats?.total || 0;
   const statusDistribution = [
-    { status: 'Available', count: stats?.available || 0, color: '#52c41a' },
-    { status: 'Allocated', count: stats?.allocated || 0, color: '#1890ff' },
-    { status: 'Active', count: stats?.active || 0, color: '#13c2c2' },
-    { status: 'Suspended', count: stats?.suspended || 0, color: '#faad14' },
-    { status: 'Terminated', count: stats?.terminated || 0, color: '#ff4d4f' },
-    { status: 'Retired', count: stats?.retired || 0, color: '#d9d9d9' },
+    { status: 'Available', count: stats?.available || 0, color: 'var(--success-color)' },
+    { status: 'Allocated', count: stats?.allocated || 0, color: 'var(--primary-color)' },
+    { status: 'Active', count: stats?.active || 0, color: 'var(--info-color)' },
+    { status: 'Suspended', count: stats?.suspended || 0, color: 'var(--warning-color)' },
+    { status: 'Terminated', count: stats?.terminated || 0, color: 'var(--error-color)' },
+    { status: 'Retired', count: stats?.retired || 0, color: 'var(--text-color-secondary)' },
   ];
 
   // Activity analysis by date
@@ -132,12 +136,13 @@ const Reports: React.FC = () => {
   const batchData = selectedBatch ? batchAll.filter(b => b.batchId === selectedBatch) : batchAll;
 
   const exportData = recentSims.map((sim: any) => ({
-    ICCID: sim.iccid,
-    IMSI: sim.imsi || '',
-    Type: sim.type,
-    Status: sim.status,
-    BatchID: sim.batchId || '',
-    Created: new Date(sim.createdDate).toISOString(),
+    ICCID: getChar(sim, 'ICCID') || sim.name || sim.id,
+    IMSI: getChar(sim, 'IMSI') || '',
+    Type: sim.type || sim['@type'] || sim?.resourceSpecification?.name || '',
+    Status: sim.resourceStatus || sim.status || '',
+    State: getChar(sim, 'RESOURCE_STATE') || '',
+    BatchID: getChar(sim, 'BatchId') || '',
+    Created: sim.createdDate ? new Date(sim.createdDate).toISOString() : '',
   }));
 
   if (statsLoading && !stats) {
@@ -213,7 +218,7 @@ const Reports: React.FC = () => {
               title={t('dashboard.totalSims')}
               value={totalSims}
               prefix={<BarChartOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              valueStyle={{ color: 'var(--primary-color)' }}
             />
           </Card>
         </Col>
@@ -222,7 +227,7 @@ const Reports: React.FC = () => {
             <Statistic
               title={t('dashboard.available')}
               value={stats?.available || 0}
-              valueStyle={{ color: '#52c41a' }}
+              valueStyle={{ color: 'var(--success-color)' }}
             />
           </Card>
         </Col>
@@ -231,7 +236,7 @@ const Reports: React.FC = () => {
             <Statistic
               title={t('dashboard.active')}
               value={stats?.active || 0}
-              valueStyle={{ color: '#13c2c2' }}
+              valueStyle={{ color: 'var(--info-color)' }}
             />
           </Card>
         </Col>
@@ -240,7 +245,7 @@ const Reports: React.FC = () => {
             <Statistic
               title={t('sim.statusValues.suspended')}
               value={stats?.suspended || 0}
-              valueStyle={{ color: '#faad14' }}
+              valueStyle={{ color: 'var(--warning-color)' }}
             />
           </Card>
         </Col>
@@ -249,7 +254,7 @@ const Reports: React.FC = () => {
             <Statistic
               title={t('sim.statusValues.terminated')}
               value={stats?.terminated || 0}
-              valueStyle={{ color: '#ff4d4f' }}
+              valueStyle={{ color: 'var(--error-color)' }}
             />
           </Card>
         </Col>
@@ -308,7 +313,7 @@ const Reports: React.FC = () => {
                   </div>
                   <Progress
                     percent={totalSims > 0 ? ((count as number) / totalSims * 100) : 0}
-                    strokeColor={type === SimType.ESIM ? '#722ed1' : '#1890ff'}
+                    strokeColor={type === SimType.ESIM ? 'var(--info-color)' : 'var(--primary-color)'}
                     showInfo={false}
                     size="small"
                   />
@@ -347,10 +352,10 @@ const Reports: React.FC = () => {
                 {activityData.map((item, index) => (
                   <Col xs={24} sm={12} md={8} lg={6} xl={4} key={index}>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1890ff' }}>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: 'var(--primary-color)' }}>
                         {String(item.count)}
                       </div>
-                      <div style={{ fontSize: 12, color: '#666' }}>
+                      <div style={{ fontSize: 12, opacity: 0.75 }}>
                         {new Date(item.date).toLocaleDateString(undefined, { 
                           month: 'short', 
                           day: 'numeric' 
@@ -361,7 +366,7 @@ const Reports: React.FC = () => {
                 ))}
               </Row>
             ) : (
-              <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>
+              <div style={{ textAlign: 'center', padding: 40, opacity: 0.75 }}>
                 {t('reports.noRecentActivity')}
               </div>
             )}
@@ -379,7 +384,7 @@ const Reports: React.FC = () => {
               value={totalSims > 0 ? (((stats?.active || 0) / totalSims) * 100).toFixed(1) : 0}
               suffix="%"
               precision={1}
-              valueStyle={{ color: '#13c2c2' }}
+              valueStyle={{ color: 'var(--info-color)' }}
             />
             <Text type="secondary" style={{ fontSize: 12 }}>
               {t('reports.utilizationHint')}
@@ -393,7 +398,7 @@ const Reports: React.FC = () => {
               value={totalSims > 0 ? ((((stats?.suspended || 0) + (stats?.terminated || 0)) / totalSims) * 100).toFixed(1) : 0}
               suffix="%"
               precision={1}
-              valueStyle={{ color: '#ff4d4f' }}
+              valueStyle={{ color: 'var(--error-color)' }}
             />
             <Text type="secondary" style={{ fontSize: 12 }}>
               {t('reports.issueHint')}

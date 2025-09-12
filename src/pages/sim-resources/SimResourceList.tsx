@@ -35,7 +35,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { CSVLink } from 'react-csv';
 import apiService from '../../services/api.service';
-import { SimResource, SimStatus, SimType, LifecycleAction, SimResourceSearchCriteria } from '../../types/sim.types';
+import { SimResource, SimStatus, LifecycleAction, SimResourceSearchCriteria, RESOURCE_STATUS_VALUES } from '../../types/sim.types';
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
@@ -55,7 +55,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
   const [searchCriteria, setSearchCriteria] = useState<SimResourceSearchCriteria>({
     limit: 20,
     offset: 0,
-    sort: 'createdDate',
+    sort: '-createdDate',
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -176,14 +176,6 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     setCurrentPage(1);
   }, []);
 
-  const handleImsiSearch = useCallback((value: string) => {
-    setSearchCriteria((prev: SimResourceSearchCriteria) => ({
-      ...prev,
-      imsi: value || undefined,
-    }));
-    setCurrentPage(1);
-  }, []);
-
   const handleFilterChange = (field: keyof SimResourceSearchCriteria, value: any) => {
     setSearchCriteria((prev: SimResourceSearchCriteria) => ({
       ...prev,
@@ -231,19 +223,28 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
   const handleDelete = (sim: SimResource) => {
     Modal.confirm({
       title: t('titles.deleteSimResource'),
-      content: t('messages.confirmDeleteSim', { iccid: sim.iccid }),
+      content: t('messages.confirmDeleteSim', { iccid: (getChar(sim, 'ICCID') as any) || (sim as any)?.iccid || (sim as any)?.name || sim.id }),
       okType: 'danger',
       onOk: () => deleteMutation.mutate(sim.id),
     });
   };
 
-  const getStatusColor = (status?: string | SimStatus) => {
-    const s = String(status || '').toLowerCase();
+  const getStatusColor = (status?: string | SimStatus, record?: any) => {
+    const stateChar = record ? String(getChar(record, 'RESOURCE_STATE') || '').toLowerCase() : '';
+    const s = stateChar || String(status || '').toLowerCase();
     switch (s) {
+      // New ResourceStatus values
       case 'available': return 'green';
+      case 'reserved': return 'gold';
+      case 'standby': return 'cyan';
+      case 'suspended': return 'orange';
+      case 'alarm': return 'red';
+      case 'completed': return 'green';
+      case 'cancelled': return 'default';
+      case 'unknown': return 'default';
+      // Legacy values fallback
       case 'allocated': return 'blue';
       case 'active': return 'cyan';
-      case 'suspended': return 'orange';
       case 'terminated': return 'red';
       case 'retired': return 'default';
       default: return 'default';
@@ -252,19 +253,21 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
 
   const getAvailableActions = (sim: SimResource) => {
     const actions: any[] = [];
-    const statusRaw = (sim as any)?.status || (sim as any)?.resourceStatus || '';
+    const stateChar = String(getChar(sim, 'RESOURCE_STATE') || '').toLowerCase();
+    const statusRaw = stateChar || (sim as any)?.status || (sim as any)?.resourceStatus || '';
     const status = String(statusRaw).toLowerCase();
     
     switch (status) {
+      // New statuses
       case 'available':
-      case 'allocated':
+      case 'standby':
+      case 'unknown':
         actions.push({
           key: 'activate',
           label: 'Activate',
           icon: <PlayCircleOutlined />,
           onClick: () => handleLifecycleAction(LifecycleAction.ACTIVATE, sim),
         });
-        // Allow retiring an unused SIM
         actions.push({
           key: 'retire',
           label: 'Retire',
@@ -274,6 +277,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
         });
         break;
       case 'active':
+      case 'reserved':
         actions.push({
           key: 'suspend',
           label: 'Suspend',
@@ -308,6 +312,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
           onClick: () => handleLifecycleAction(LifecycleAction.RETIRE, sim),
         });
         break;
+      case 'cancelled':
       case 'terminated':
         actions.push({
           key: 'release',
@@ -322,6 +327,9 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
           danger: true,
           onClick: () => handleLifecycleAction(LifecycleAction.RETIRE, sim),
         });
+        break;
+      case 'completed':
+        // No further lifecycle actions
         break;
     }
 
@@ -354,7 +362,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
           onClick={() => navigate(`/sim-resources/${record.id}`)}
           style={{ padding: 0, fontFamily: 'monospace' }}
         >
-          {iccid || record?.name || record?.id}
+          {getChar(record, 'ICCID') || iccid || record?.name || record?.id}
         </Button>
       ),
     },
@@ -365,7 +373,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       width: 180,
       render: (_: any, record: any) => (
         <span style={{ fontFamily: 'monospace' }}>
-          {record?.imsi || getChar(record, 'IMSI') || '-'}
+          {getChar(record, 'IMSI') || '-'}
         </span>
       ),
     },
@@ -378,7 +386,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
         const displayType = record?.type || record?.['@type'] || record?.resourceSpecification?.name || '-';
         const isEsim = String(displayType).toLowerCase().includes('esim');
         return (
-          <Tag color={isEsim ? 'purple' : 'blue'}>
+          <Tag color={isEsim ? 'cyan' : 'blue'}>
             {displayType}
           </Tag>
         );
@@ -390,10 +398,24 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       key: 'status',
       width: 120,
       render: (_: any, record: any) => {
-        const s = record?.status || record?.resourceStatus;
+        const s = record?.resourceStatus || record?.status;
         return (
           <Tag color={getStatusColor(s as any)}>
             {s || '-'}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: t('sim.state'),
+      dataIndex: 'state',
+      key: 'state',
+      width: 120,
+      render: (_: any, record: any) => {
+        const state = getChar(record, 'RESOURCE_STATE');
+        return (
+          <Tag color={getStatusColor(state as any)}>
+            {state || '-'}
           </Tag>
         );
       },
@@ -403,7 +425,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       dataIndex: 'batchId',
       key: 'batchId',
       width: 120,
-      render: (batchId: string) => batchId || '-',
+      render: (batchId: string, record: any) => batchId || getChar(record, 'BatchId') || '-',
     },
     {
       title: t('sim.created'),
@@ -472,13 +494,15 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
 
   const csvData = simResources.map((sim: any) => {
     const displayType = sim?.type || sim?.['@type'] || sim?.resourceSpecification?.name || '';
-    const s = sim?.status || sim?.resourceStatus || '';
+    const s = sim?.resourceStatus || sim?.status || '';
+    const state = getChar(sim, 'RESOURCE_STATE') || '';
     return {
-      ICCID: sim?.iccid || sim?.name || sim?.id,
-      IMSI: sim?.imsi || getChar(sim, 'IMSI') || '',
+      ICCID: getChar(sim, 'ICCID') || sim?.iccid || sim?.name || sim?.id,
+      IMSI: getChar(sim, 'IMSI') || '',
       Type: displayType,
       Status: s,
-      BatchID: sim?.batchId || '',
+      State: state,
+      BatchID: sim?.batchId || getChar(sim, 'BatchId') || '',
       Created: sim?.createdDate ? new Date(sim.createdDate).toISOString() : '',
     };
   });
@@ -499,12 +523,6 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                 placeholder={t('placeholders.searchByIccid')}
                 style={{ width: 250 }}
                 onSearch={handleSearch}
-                enterButton={<SearchOutlined />}
-              />
-              <Input.Search
-                placeholder={t('placeholders.searchByImsi')}
-                style={{ width: 250 }}
-                onSearch={handleImsiSearch}
                 enterButton={<SearchOutlined />}
               />
               
@@ -567,7 +585,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                   onChange={(value) => handleFilterChange('status', value.length ? value : undefined)}
                   allowClear
                 >
-                  {Object.values(SimStatus).map(status => (
+                  {RESOURCE_STATUS_VALUES.map(status => (
                     <Option key={status} value={status}>
                       <Tag color={getStatusColor(status)}>{status}</Tag>
                     </Option>
@@ -583,9 +601,8 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                   onChange={(value) => handleFilterChange('type', value.length ? value : undefined)}
                   allowClear
                 >
-                  {Object.values(SimType).map(type => (
-                    <Option key={type} value={type}>{type}</Option>
-                  ))}
+                  <Option key="LogicalResource" value="LogicalResource">LogicalResource</Option>
+                  <Option key="PhysicalResource" value="PhysicalResource">PhysicalResource</Option>
                 </Select>
               </Col>
               <Col xs={24} sm={12} md={6}>
@@ -602,16 +619,15 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                   placeholder={[t('filters.createdFrom'), t('filters.createdTo')]}
                   onChange={(dates) => {
                     if (dates && dates[0] && dates[1]) {
-                      handleFilterChange('createdDateFrom', dates[0].toISOString());
-                      handleFilterChange('createdDateTo', dates[1].toISOString());
+                      const from = dates[0].toISOString();
+                      const to = dates[1].toISOString();
+                      handleFilterChange('createdDate', `${from},${to}`);
                     } else {
-                      handleFilterChange('createdDateFrom', undefined);
-                      handleFilterChange('createdDateTo', undefined);
+                      handleFilterChange('createdDate', undefined);
                     }
                   }}
                 />
               </Col>
-
               <Col xs={24} sm={12} md={6}>
                 <Input
                   placeholder={t('filters.imsi')}

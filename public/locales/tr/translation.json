@@ -72,7 +72,8 @@
       "suspended": "Askıda",
       "terminated": "Sonlandırıldı",
       "retired": "Emekli"
-    }
+    },
+    "state": "State"
   },
   "order": {
     "createNew": "Yeni Sipariş Oluştur",
@@ -136,7 +137,16 @@
     "actions": "İşlemler",
     "filters": "Filtreler",
     "refresh": "Yenile",
-    "cancel": "Vazgeç"
+    "cancel": "Vazgeç",
+    "empty": "Kayıt yok",
+    "default": "Varsayılan",
+    "primary": "Birincil"
+  },
+  "status": {
+    "success": "Başarılı",
+    "warning": "Uyarı",
+    "error": "Hata",
+    "info": "Bilgi"
   },
   "buttons": {
     "viewSimResources": "SIM Kaynaklarını Görüntüle",
@@ -270,6 +280,51 @@
     "utilizationHint": "Aktif SIM'lerin yüzdesi",
     "issueRate": "Sorun Oranı",
     "issueHint": "Askıda/sonlandırılmış SIM'lerin yüzdesi"
+  },
+  "theme": {
+    "settings": "Tema Ayarları",
+    "reset": "Varsayılana döndür",
+    "close": "Kapat",
+    "colors": "Renkler",
+    "navbarBg": "Navbar Arka Planı",
+    "navbarText": "Navbar Yazı Rengi",
+    "sidebarBg": "Sidebar Arka Planı",
+    "sidebarText": "Sidebar Yazı Rengi",
+    "pageBg": "Sayfa Arka Planı",
+    "cardBg": "Kart/Konteyner Arka Planı",
+    "textColor": "Yazı Rengi",
+    "secondaryTextColor": "İkincil Yazı Rengi",
+    "primaryColor": "Birincil/Buton Rengi",
+    "linkColor": "Bağlantı Rengi",
+    "menuActiveBg": "Menü Aktif Arka Plan",
+    "menuActiveText": "Menü Aktif Yazı",
+    "tableRowHoverBg": "Tablo Satırı Hover Arka Planı",
+    "headerBorderColor": "Header Kenar Rengi",
+    "successColor": "Başarı Rengi",
+    "warningColor": "Uyarı Rengi",
+    "errorColor": "Hata Rengi",
+    "infoColor": "Bilgi Rengi",
+    "typographyLayout": "Tipografi ve Yerleşim",
+    "fontSize": "Temel Yazı Boyutu",
+    "borderRadius": "Köşe Yuvarlaklığı",
+    "compact": "Kompakt Mod",
+    "mode": "Mod",
+    "light": "Açık",
+    "dark": "Koyu",
+    "button": "Tema",
+    "presets": "Hazır Temalar",
+    "recommended": "Önerilen",
+    "custom": "Özel",
+    "apply": "Uygula",
+    "delete": "Sil",
+    "savePreset": "Tema olarak kaydet",
+    "presetNamePlaceholder": "Tema adı",
+    "preview": "Önizleme",
+    "tagLightness": "Etiket Açıklığı",
+    "tagBgStrength": "Arka plan yoğunluğu (%)",
+    "tagBorderStrength": "Kenarlık yoğunluğu (%)",
+    "tagLightnessHint": "Etiket arka planı/kenarlığı için açık ton yoğunluğunu ayarlayın.",
+    "tagPalette": "Etiket Paleti"
   },
   "lang": {
     "en": "İngilizce",

@@ -21,12 +21,12 @@ const LoginPage: React.FC = () => {
           style={{
             width: 400,
             textAlign: 'center',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            boxShadow: '0 4px 12px color-mix(in srgb, var(--text-color) 12%, transparent)',
           }}
         >
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
-              <IdcardOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+              <IdcardOutlined style={{ fontSize: 48, color: 'var(--primary-color)' }} />
               <Title level={2} style={{ margin: '16px 0 8px 0' }}>
                 SIM Inventory Management
               </Title>
@@ -45,7 +45,7 @@ const LoginPage: React.FC = () => {
               Sign in with Keycloak
             </Button>
             
-            <div style={{ fontSize: 12, color: '#666', marginTop: 16 }}>
+            <div style={{ fontSize: 12, marginTop: 16 }}>
               <Paragraph type="secondary" style={{ margin: 0 }}>
                 Secure authentication powered by Keycloak
               </Paragraph>
@@ -60,7 +60,11 @@ const LoginPage: React.FC = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--primary-color) 35%, var(--page-bg)) 0%,
+            color-mix(in srgb, var(--primary-color) 60%, var(--page-bg)) 100%
+          );
           padding: 20px;
         }
         

@@ -10,7 +10,7 @@ interface LoadingSpinnerProps {
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'large',
-  tip = 'Loading...',
+  tip,
   spinning = true,
   children,
 }) => {

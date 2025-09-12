@@ -117,15 +117,26 @@ const SimOrderDetail: React.FC = () => {
   const getSimStatusColor = (status?: string) => {
     const s = String(status || '').toLowerCase();
     switch (s) {
+      // New ResourceStatus values
       case 'available': return 'green';
+      case 'reserved': return 'gold';
+      case 'standby': return 'cyan';
+      case 'suspended': return 'orange';
+      case 'alarm': return 'red';
+      case 'completed': return 'purple';
+      case 'cancelled': return 'default';
+      case 'unknown': return 'default';
+      // Legacy values fallback
       case 'allocated': return 'blue';
       case 'active': return 'cyan';
-      case 'suspended': return 'orange';
       case 'terminated': return 'red';
       case 'retired': return 'default';
       default: return 'default';
     }
   };
+
+  const getChar = (obj: any, key: string) =>
+    obj?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
 
   const handleCancelOrder = () => {
     Modal.confirm({
@@ -172,13 +183,19 @@ const SimOrderDetail: React.FC = () => {
       ),
     },
     {
-      title: 'Resource Status',
-      key: 'resourceStatus',
+      title: 'Status',
+      key: 'status',
       render: (_: any, record: any) => {
-        const status = record.resource?.status || record.resource?.resourceStatus;
-        return status ? (
-          <Tag color={getSimStatusColor(status)}>{status}</Tag>
-        ) : '-';
+        const status = record.resource?.resourceStatus || record.resource?.status;
+        return status ? (<Tag color={getSimStatusColor(status)}>{status}</Tag>) : '-';
+      },
+    },
+    {
+      title: 'State',
+      key: 'state',
+      render: (_: any, record: any) => {
+        const state = getChar(record.resource, 'RESOURCE_STATE');
+        return state ? (<Tag color={getSimStatusColor(state)}>{state}</Tag>) : '-';
       },
     },
     {
@@ -216,9 +233,9 @@ const SimOrderDetail: React.FC = () => {
       children: (
         <>
           <div><strong>Order Created</strong></div>
-          <div style={{ fontSize: 12, color: '#666' }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
             {new Date(order.orderDate).toLocaleString()}
-          </div>
+          </Text>
         </>
       ),
     },
@@ -227,9 +244,9 @@ const SimOrderDetail: React.FC = () => {
       children: (
         <>
           <div><strong>{getDisplayState(order) as string}</strong></div>
-          <div style={{ fontSize: 12, color: '#666' }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
             {new Date(order.completionDate).toLocaleString()}
-          </div>
+          </Text>
         </>
       ),
     }] : []),
@@ -311,10 +328,10 @@ const SimOrderDetail: React.FC = () => {
                   : '-'
                 }
               </Descriptions.Item>
-              <Descriptions.Item label={t('common.description')} span={2}>
+              <Descriptions.Item label={t('common.description')}>
                 {order.description || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={t('order.externalId')} span={2}>
+              <Descriptions.Item label={t('order.externalId')}>
                 {order.externalId || '-'}
               </Descriptions.Item>
             </Descriptions>
@@ -342,9 +359,9 @@ const SimOrderDetail: React.FC = () => {
                   </div>
                   <div style={{ 
                     padding: 12, 
-                    backgroundColor: '#f5f5f5', 
+                    backgroundColor: 'var(--table-row-hover-bg)', 
                     borderRadius: 4,
-                    borderLeft: '3px solid #1890ff'
+                    borderLeft: '3px solid var(--primary-color)'
                   }}>
                     {note.text}
                   </div>

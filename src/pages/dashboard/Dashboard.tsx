@@ -1,12 +1,12 @@
 import React from 'react';
-import { Row, Col, Card, Statistic, Table, Tag, Typography, Space, Button } from 'antd';
+import { Row, Col, Card, Statistic, Table, Tag, Typography, Space, Button, message } from 'antd';
 import {
   PlusOutlined,
   IdcardOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../../services/api.service';
 import { SimOrder } from '../../types/sim.types';
@@ -18,41 +18,78 @@ const { Title } = Typography;
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { hasRole } = useKeycloak();
+  const queryClient = useQueryClient();
+  const { hasRole, authenticated, token } = useKeycloak();
   const { t } = useTranslation();
 
   // Fetch statistics
   const { data: statsResponse, isLoading: statsLoading } = useQuery(
-    'simStatistics',
+    ['simStatistics', token],
     () => apiService.getSimStatistics(),
     {
       refetchInterval: 30000, // Refresh every 30 seconds
+      enabled: authenticated && !!token,
     }
   );
 
+  // Ensure queries refetch after token becomes available
+  React.useEffect(() => {
+    if (authenticated && token) {
+      queryClient.invalidateQueries(['recentSims']);
+      queryClient.invalidateQueries(['recentOrders']);
+      queryClient.invalidateQueries(['simStatistics']);
+    }
+  }, [authenticated, token, queryClient]);
+
   // Fetch recent SIM resources
   const { data: recentSimsResponse, isLoading: recentSimsLoading } = useQuery(
-    'recentSims',
-    () => apiService.getSimResources({ limit: 10, sort: 'createdDate'}),
+    ['recentSims', token],
+    () => apiService.getSimResources({ limit: 10, offset: 0, sort: '-createdDate'}),
     {
       refetchInterval: 60000, // Refresh every minute
+      enabled: authenticated && !!token,
+      onError: (error: any) => {
+        message.error(`Failed to load recent SIMs: ${error?.response?.data?.message || error?.message || 'Unknown error'}`);
+        // Also log details for debugging
+        // eslint-disable-next-line no-console
+        console.error('recentSims error', error);
+      },
     }
   );
 
   // Fetch recent orders
   const { data: recentOrdersResponse, isLoading: recentOrdersLoading } = useQuery(
-    'recentOrders',
-    () => apiService.getSimOrders({ limit: 10, sort: 'orderDate'}),
+    ['recentOrders', token],
+    () => apiService.getSimOrders({ limit: 10, offset: 0, sort: '-orderDate'}),
     {
       refetchInterval: 60000, // Refresh every minute
+      enabled: authenticated && !!token,
+      onError: (error: any) => {
+        message.error(`Failed to load recent orders: ${error?.response?.data?.message || error?.message || 'Unknown error'}`);
+        // eslint-disable-next-line no-console
+        console.error('recentOrders error', error);
+      },
     }
   );
 
   const stats = statsResponse?.data;
-  const recentSims = recentSimsResponse?.data?.data || [];
-  const recentOrders = recentOrdersResponse?.data?.data || [];
+  const toArray = (payload: any): any[] => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.items)) return payload.items;
+    if (Array.isArray(payload?.content)) return payload.content;
+    if (Array.isArray(payload?.results)) return payload.results;
+    return [];
+  };
+  const recentSims = toArray(recentSimsResponse?.data);
+  const recentOrders = toArray(recentOrdersResponse?.data);
 
   
+
+  // Helper to read a characteristic value
+  const getChar = (sim: any, key: string) =>
+    sim?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
 
   const simColumns = [
     {
@@ -65,7 +102,7 @@ const Dashboard: React.FC = () => {
           onClick={() => navigate(`/sim-resources/${record.id}`)}
           style={{ padding: 0 }}
         >
-          {iccid || record?.name || record?.id}
+          {getChar(record, 'ICCID') || iccid || record?.name || record?.id}
         </Button>
       ),
     },
@@ -77,7 +114,7 @@ const Dashboard: React.FC = () => {
         const displayType = record?.type || record?.['@type'] || record?.resourceSpecification?.name || '-';
         const isEsim = String(displayType).toLowerCase().includes('esim');
         return (
-          <Tag color={isEsim ? 'purple' : 'blue'}>
+          <Tag color={isEsim ? 'cyan' : 'blue'}>
             {displayType}
           </Tag>
         );
@@ -88,20 +125,51 @@ const Dashboard: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (_: any, record: any) => {
-        const s = record?.status || record?.resourceStatus || '-';
-        const colorMap: Record<string, string> = {
+        const s = String(record?.resourceStatus || record?.status || '').toLowerCase();
+        const map: Record<string, string> = {
           available: 'green',
+          reserved: 'gold',
+          standby: 'cyan',
+          suspended: 'orange',
+          alarm: 'red',
+          completed: 'green',
+          cancelled: 'default',
+          unknown: 'default',
           allocated: 'blue',
           active: 'cyan',
-          suspended: 'orange',
           terminated: 'red',
           retired: 'default',
         };
-        const color = colorMap[String(s).toLowerCase()] || 'default';
+        const color = map[s] || 'default';
         return (
           <Tag color={color}>
             {s}
           </Tag>
+        );
+      },
+    },
+    {
+      title: t('sim.state'),
+      dataIndex: 'state',
+      key: 'state',
+      render: (_: any, record: any) => {
+        const state = String(getChar(record, 'RESOURCE_STATE') || '').toLowerCase();
+        const map: Record<string, string> = {
+          available: 'green',
+          reserved: 'gold',
+          standby: 'cyan',
+          suspended: 'orange',
+          alarm: 'red',
+          completed: 'green',
+          cancelled: 'default',
+          unknown: 'default',
+          active: 'cyan',
+          terminated: 'red',
+          retired: 'default',
+        };
+        const color = map[state] || 'default';
+        return (
+          <Tag color={color}>{state || '-'}</Tag>
         );
       },
     },
@@ -218,7 +286,7 @@ const Dashboard: React.FC = () => {
               title={t('dashboard.totalSims')}
               value={stats?.total || 0}
               prefix={<IdcardOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              valueStyle={{ color: 'var(--primary-color)' }}
             />
           </Card>
         </Col>
@@ -228,7 +296,7 @@ const Dashboard: React.FC = () => {
               title={t('dashboard.available')}
               value={stats?.available || 0}
               prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
+              valueStyle={{ color: 'var(--success-color)' }}
             />
           </Card>
         </Col>
@@ -238,7 +306,7 @@ const Dashboard: React.FC = () => {
               title={t('dashboard.active')}
               value={stats?.active || 0}
               prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#13c2c2' }}
+              valueStyle={{ color: 'var(--info-color)' }}
             />
           </Card>
         </Col>
@@ -248,7 +316,7 @@ const Dashboard: React.FC = () => {
               title={t('dashboard.issues')}
               value={(stats?.suspended || 0) + (stats?.terminated || 0)}
               prefix={<ExclamationCircleOutlined />}
-              valueStyle={{ color: '#ff4d4f' }}
+              valueStyle={{ color: 'var(--error-color)' }}
             />
           </Card>
         </Col>

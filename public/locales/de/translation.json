@@ -72,7 +72,8 @@
       "suspended": "Suspendiert",
       "terminated": "Beendet",
       "retired": "Stillgelegt"
-    }
+    },
+    "state": "State"
   },
   "order": {
     "createNew": "Neuen Auftrag erstellen",
@@ -136,7 +137,16 @@
     "actions": "Aktionen",
     "filters": "Filter",
     "refresh": "Aktualisieren",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "empty": "Keine Einträge",
+    "default": "Standard",
+    "primary": "Primär"
+  },
+  "status": {
+    "success": "Erfolg",
+    "warning": "Warnung",
+    "error": "Fehler",
+    "info": "Info"
   },
   "buttons": {
     "viewSimResources": "SIM-Ressourcen anzeigen",
@@ -270,6 +280,51 @@
     "utilizationHint": "Prozentanteil aktiver SIMs",
     "issueRate": "Problemrate",
     "issueHint": "Prozentanteil suspendierter/beendeter SIMs"
+  },
+  "theme": {
+    "settings": "Theme-Einstellungen",
+    "reset": "Auf Standard zurücksetzen",
+    "close": "Schließen",
+    "colors": "Farben",
+    "navbarBg": "Navbar-Hintergrund",
+    "navbarText": "Navbar-Textfarbe",
+    "sidebarBg": "Sidebar-Hintergrund",
+    "sidebarText": "Sidebar-Textfarbe",
+    "pageBg": "Seitenhintergrund",
+    "cardBg": "Karten-/Container-Hintergrund",
+    "textColor": "Textfarbe",
+    "secondaryTextColor": "Sekundäre Textfarbe",
+    "primaryColor": "Primär-/Button-Farbe",
+    "linkColor": "Linkfarbe",
+    "menuActiveBg": "Menü aktiv Hintergrund",
+    "menuActiveText": "Menü aktiv Text",
+    "tableRowHoverBg": "Tabellenzeile Hover-Hintergrund",
+    "headerBorderColor": "Header-Randfarbe",
+    "successColor": "Erfolgsfarbe",
+    "warningColor": "Warnfarbe",
+    "errorColor": "Fehlerfarbe",
+    "infoColor": "Infofarbe",
+    "typographyLayout": "Typografie & Layout",
+    "fontSize": "Basis-Schriftgröße",
+    "borderRadius": "Eckenradius",
+    "compact": "Kompakter Modus",
+    "mode": "Modus",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "button": "Theme",
+    "presets": "Voreinstellungen",
+    "recommended": "Empfohlen",
+    "custom": "Benutzerdefiniert",
+    "apply": "Anwenden",
+    "delete": "Löschen",
+    "savePreset": "Als Voreinstellung speichern",
+    "presetNamePlaceholder": "Name der Voreinstellung",
+    "preview": "Vorschau",
+    "tagLightness": "Tag-Helligkeit",
+    "tagBgStrength": "Hintergrundstärke (%)",
+    "tagBorderStrength": "Rahmenstärke (%)",
+    "tagLightnessHint": "Helligkeit der Tag-Hintergründe/Rahmen einstellen.",
+    "tagPalette": "Tag-Palette"
   },
   "lang": {
     "en": "English",

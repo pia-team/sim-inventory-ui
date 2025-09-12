@@ -13,6 +13,46 @@ export enum SimStatus {
   RETIRED = 'Retired',
 }
 
+// Allowed resourceStatus values used by backend
+export type ResourceStatus =
+  | 'standby'
+  | 'alarm'
+  | 'available'
+  | 'reserved'
+  | 'unknown'
+  | 'suspended'
+  | 'completed'
+  | 'cancelled';
+
+export const RESOURCE_STATUS_VALUES: ReadonlyArray<ResourceStatus> = [
+  'standby',
+  'alarm',
+  'available',
+  'reserved',
+  'unknown',
+  'suspended',
+  'completed',
+  'cancelled',
+];
+
+// Operational/Administrative state enums
+export enum AdministrativeState {
+  LOCKED = 'locked',
+  UNLOCKED = 'unlocked',
+  SHUTDOWN = 'shutdown',
+}
+
+export enum OperationalState {
+  ENABLE = 'enable',
+  DISABLE = 'disable',
+}
+
+export enum UsageState {
+  IDLE = 'idle',
+  ACTIVE = 'active',
+  BUSY = 'busy',
+}
+
 export enum ProfileType {
   PREPAID = 'Prepaid',
   POSTPAID = 'Postpaid',
@@ -42,14 +82,7 @@ export interface SimResource {
   id: string;
   href?: string;
 
-  // Domain-friendly convenience fields (not part of TMF payload top-level)
-  // These are derived from characteristics or backend mapping; kept for UI compatibility
-  iccid?: string;
-  imsi?: string;
-  type?: SimType;
-  status?: SimStatus | string;
-  batchId?: string;
-  profileType?: ProfileType;
+ 
 
   // Lifecycle and audit
   createdDate?: string;
@@ -69,10 +102,10 @@ export interface SimResource {
   endOperatingDate?: string;
 
   // Administrative/operational states
-  administrativeState?: string;
-  operationalState?: string;
-  resourceStatus?: string;
-  usageState?: string;
+  administrativeState?: AdministrativeState;
+  operationalState?: OperationalState;
+  resourceStatus?: ResourceStatus | string;
+  usageState?: UsageState;
   statusReason?: string;
 
   // Relationships and references
@@ -236,22 +269,22 @@ export interface Note {
 // API Request/Response Types
 export interface CreateSimResourceRequest {
   '@type'?: string;
-  iccid: string;
-  type: SimType;
-  profileType?: ProfileType;
-  batchId?: string;
   resourceCharacteristic?: ResourceCharacteristic[];
   description?: string;
   name?: string;
 }
 
 export interface UpdateSimResourceRequest {
+  name?: string;
   status?: SimStatus;
-  imsi?: string;
-  profileType?: ProfileType;
+  resourceStatus?: ResourceStatus | string;
+  category?: string;
+  administrativeState?: AdministrativeState;
+  operationalState?: OperationalState;
+  usageState?: UsageState;
+  statusReason?: string;
   description?: string;
   resourceCharacteristic?: ResourceCharacteristic[];
-  lastModifiedDate: string;
 }
 
 export interface CreateSimOrderRequest {
@@ -272,12 +305,12 @@ export interface CreateSimOrderRequest {
 export interface SimResourceSearchCriteria {
   iccid?: string;
   imsi?: string;
-  status?: SimStatus[];
+  status?: (SimStatus | ResourceStatus | string)[];
   type?: SimType[];
+  '@type'?: string[]; // TMF resource discriminator (e.g., 'LogicalResource' or 'PhysicalResource')
   batchId?: string;
   profileType?: ProfileType[];
-  createdDateFrom?: string;
-  createdDateTo?: string;
+  createdDate?: string; // comma-separated range: "fromISO,toISO"
   lastModifiedDateFrom?: string;
   lastModifiedDateTo?: string;
   limit?: number;

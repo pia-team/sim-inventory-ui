@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { ConfigProvider } from 'antd';
 import { KeycloakProvider } from './contexts/KeycloakContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import AppRoutes from './routes/AppRoutes';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import 'antd/dist/reset.css';
@@ -19,19 +19,10 @@ const queryClient = new QueryClient({
   },
 });
 
-// Ant Design theme configuration
-const antdTheme = {
-  token: {
-    colorPrimary: '#1890ff',
-    borderRadius: 6,
-    fontSize: 14,
-  },
-};
-
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <ConfigProvider theme={antdTheme}>
+      <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <KeycloakProvider>
             <Router
@@ -46,7 +37,7 @@ const App: React.FC = () => {
             </Router>
           </KeycloakProvider>
         </QueryClientProvider>
-      </ConfigProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };

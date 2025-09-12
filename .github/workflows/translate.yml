@@ -28,7 +28,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          node translate.js --source=en --languages=tr,de,fr
+          node translate.js --source=en --languages=tr,de,fr --ignoreQuota
 
       - name: Commit changes
         env:

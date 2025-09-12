@@ -300,12 +300,14 @@ const BatchImport: React.FC = () => {
       description: values.description,
       sims: validSims.map(sim => ({
         '@type': sim.type === SimType.ESIM ? 'LogicalResource' : 'PhysicalResource',
-        iccid: sim.iccid,
-        type: sim.type,
-        profileType: sim.profileType,
+        name: sim.name || sim.iccid,
         description: sim.description,
-        name: sim.name,
-        batchId: values.batchId,
+        resourceCharacteristic: [
+          { name: 'ICCID', value: sim.iccid, valueType: 'string' },
+          { name: 'SIMType', value: sim.type, valueType: 'string' },
+          ...(sim.profileType ? [{ name: 'ProfileType', value: sim.profileType, valueType: 'string' } as any] : []),
+          { name: 'BatchId', value: values.batchId, valueType: 'string' },
+        ],
       })),
     };
     importMutation.mutate(request);
@@ -330,7 +332,7 @@ const BatchImport: React.FC = () => {
       render: (iccid: string, record: ParsedSim) => (
         <span style={{ 
           fontFamily: 'monospace',
-          color: record.valid ? undefined : '#ff4d4f'
+          color: record.valid ? undefined : 'var(--error-color)'
         }}>
           {iccid}
         </span>
@@ -355,9 +357,9 @@ const BatchImport: React.FC = () => {
       width: 80,
       render: (_: any, record: ParsedSim) => (
         record.valid ? (
-          <CheckCircleOutlined style={{ color: '#52c41a' }} />
+          <CheckCircleOutlined style={{ color: 'var(--success-color)' }} />
         ) : (
-          <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />
+          <ExclamationCircleOutlined style={{ color: 'var(--error-color)' }} />
         )
       ),
     },
@@ -512,7 +514,7 @@ const BatchImport: React.FC = () => {
               <Col xs={24} sm={8}>
                 <Card size="small">
                   <div style={{ textAlign: 'center' }}>
-                    <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
+                    <Title level={3} style={{ margin: 0, color: 'var(--primary-color)' }}>
                       {parsedData.length}
                     </Title>
                     <Text>{t('batchImport.metrics.totalRecords')}</Text>
@@ -522,7 +524,7 @@ const BatchImport: React.FC = () => {
               <Col xs={24} sm={8}>
                 <Card size="small">
                   <div style={{ textAlign: 'center' }}>
-                    <Title level={3} style={{ margin: 0, color: '#52c41a' }}>
+                    <Title level={3} style={{ margin: 0, color: 'var(--success-color)' }}>
                       {validCount}
                     </Title>
                     <Text>{t('batchImport.metrics.validRecords')}</Text>
@@ -532,7 +534,7 @@ const BatchImport: React.FC = () => {
               <Col xs={24} sm={8}>
                 <Card size="small">
                   <div style={{ textAlign: 'center' }}>
-                    <Title level={3} style={{ margin: 0, color: '#ff4d4f' }}>
+                    <Title level={3} style={{ margin: 0, color: 'var(--error-color)' }}>
                       {invalidCount}
                     </Title>
                     <Text>{t('batchImport.metrics.invalidRecords')}</Text>
@@ -677,7 +679,7 @@ const BatchImport: React.FC = () => {
               <Col xs={24} sm={6}>
                 <Card size="small">
                   <div style={{ textAlign: 'center' }}>
-                    <Title level={3} style={{ margin: 0, color: '#52c41a' }}>
+                    <Title level={3} style={{ margin: 0, color: 'var(--success-color)' }}>
                       {importResult.successCount}
                     </Title>
                     <Text>{t('batchImport.result.successful')}</Text>
@@ -687,7 +689,7 @@ const BatchImport: React.FC = () => {
               <Col xs={24} sm={6}>
                 <Card size="small">
                   <div style={{ textAlign: 'center' }}>
-                    <Title level={3} style={{ margin: 0, color: '#ff4d4f' }}>
+                    <Title level={3} style={{ margin: 0, color: 'var(--error-color)' }}>
                       {importResult.failureCount}
                     </Title>
                     <Text>{t('batchImport.result.failed')}</Text>
@@ -766,7 +768,7 @@ const BatchImport: React.FC = () => {
 
       <style>{`
         .row-error {
-          background-color: #fff2f0;
+          background-color: color-mix(in srgb, var(--error-color) 8%, var(--card-bg));
         }
 
         /* Ensure dragger texts wrap within the available width */
@@ -840,13 +842,13 @@ const BatchImport: React.FC = () => {
         .uploader .ant-upload-list { margin-top: 8px; }
         .uploader .ant-upload-list-item {
           padding: 8px 12px;
-          border: 1px solid #e6f4ff;
-          background: #f7fbff;
+          border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+          background: color-mix(in srgb, var(--primary-color) 8%, var(--card-bg));
           border-radius: 6px;
         }
         .uploader .ant-upload-list-item .ant-upload-list-item-name {
           font-weight: 600;
-          color: #262626;
+          color: var(--text-color);
           font-size: 13px;
         }
         .uploader .ant-upload-list-item-actions .ant-btn,
@@ -858,9 +860,9 @@ const BatchImport: React.FC = () => {
           width: 28px;
           height: 28px;
           border-radius: 6px;
-          border: 1px solid #ffccc7;
-          background: #fff1f0;
-          color: #cf1322;
+          border: 1px solid color-mix(in srgb, var(--error-color) 35%, transparent);
+          background: color-mix(in srgb, var(--error-color) 12%, var(--card-bg));
+          color: var(--error-color);
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -871,9 +873,9 @@ const BatchImport: React.FC = () => {
         .uploader .ant-upload-list-item-action .ant-btn-icon-only:hover,
         .uploader .ant-upload-list-item-action > button:hover,
         .uploader .ant-upload-list-item-action > a:hover {
-          border-color: #ff4d4f;
-          background: #fff2f0;
-          color: #a8071a;
+          border-color: var(--error-color);
+          background: color-mix(in srgb, var(--error-color) 12%, transparent);
+          color: var(--error-color);
         }
         .uploader .ant-upload-list-item-actions .anticon,
         .uploader .ant-upload-list-item-action .anticon {

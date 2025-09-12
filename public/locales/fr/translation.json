@@ -72,7 +72,8 @@
       "suspended": "Suspendue",
       "terminated": "Résiliée",
       "retired": "Retirée"
-    }
+    },
+    "state": "State"
   },
   "order": {
     "createNew": "Créer une nouvelle commande",
@@ -136,7 +137,16 @@
     "actions": "Actions",
     "filters": "Filtres",
     "refresh": "Actualiser",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "empty": "Aucun élément",
+    "default": "Par défaut",
+    "primary": "Principal"
+  },
+  "status": {
+    "success": "Succès",
+    "warning": "Avertissement",
+    "error": "Erreur",
+    "info": "Info"
   },
   "buttons": {
     "viewSimResources": "Voir les ressources SIM",
@@ -270,6 +280,47 @@
     "utilizationHint": "Pourcentage de SIM actives",
     "issueRate": "Taux d'incident",
     "issueHint": "Pourcentage de SIM suspendues/résilées"
+  },
+  "theme": {
+    "settings": "Paramètres du thème",
+    "reset": "Réinitialiser par défaut",
+    "close": "Fermer",
+    "colors": "Couleurs",
+    "navbarBg": "Arrière-plan de la barre de navigation",
+    "navbarText": "Couleur du texte de la barre de navigation",
+    "sidebarBg": "Arrière-plan de la barre latérale",
+    "sidebarText": "Couleur du texte de la barre latérale",
+    "pageBg": "Arrière-plan de la page",
+    "cardBg": "Arrière-plan des cartes/conteneurs",
+    "textColor": "Couleur du texte",
+    "secondaryTextColor": "Couleur du texte secondaire",
+    "primaryColor": "Couleur principale/bouton",
+    "linkColor": "Couleur des liens",
+    "menuActiveBg": "Fond actif du menu",
+    "menuActiveText": "Texte actif du menu",
+    "tableRowHoverBg": "Fond au survol des lignes du tableau",
+    "headerBorderColor": "Couleur de bordure de l'en-tête",
+    "typographyLayout": "Typographie et mise en page",
+    "fontSize": "Taille de police de base",
+    "borderRadius": "Rayon des coins",
+    "compact": "Mode compact",
+    "mode": "Mode",
+    "light": "Clair",
+    "dark": "Sombre",
+    "button": "Thème",
+    "presets": "Préréglages",
+    "recommended": "Recommandés",
+    "custom": "Personnalisés",
+    "apply": "Appliquer",
+    "delete": "Supprimer",
+    "savePreset": "Enregistrer comme préréglage",
+    "presetNamePlaceholder": "Nom du préréglage",
+    "preview": "Aperçu",
+    "tagLightness": "Luminosité des étiquettes",
+    "tagBgStrength": "Intensité de fond (%)",
+    "tagBorderStrength": "Intensité de bordure (%)",
+    "tagLightnessHint": "Ajustez l'intensité des variantes claires pour le fond/la bordure des étiquettes.",
+    "tagPalette": "Palette d'étiquettes"
   },
   "lang": {
     "en": "English",

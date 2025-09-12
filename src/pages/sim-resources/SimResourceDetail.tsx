@@ -9,6 +9,8 @@ import {
   Modal,
   Form,
   Input,
+  Select,
+  Divider,
   message,
   Typography,
   Row,
@@ -27,10 +29,12 @@ import {
   HistoryOutlined,
   UnlockOutlined,
   RestOutlined,
+  MinusCircleOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import apiService from '../../services/api.service';
-import { SimStatus, SimType, LifecycleAction } from '../../types/sim.types';
+import { SimStatus, LifecycleAction, RESOURCE_STATUS_VALUES } from '../../types/sim.types';
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
@@ -182,30 +186,43 @@ const SimResourceDetail: React.FC = () => {
 
   const sim = response.data;
 
+  // Helper to read a characteristic by name (e.g., ICCID, IMSI, BatchId)
+  const getChar = (obj: any, key: string) =>
+    obj?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
+
   const getStatusColor = (status?: string | SimStatus) => {
     const s = String(status || '').toLowerCase();
     switch (s) {
+      // New ResourceStatus values
       case 'available': return 'green';
+      case 'reserved': return 'gold';
+      case 'standby': return 'cyan';
+      case 'suspended': return 'orange';
+      case 'alarm': return 'red';
+      case 'completed': return 'purple';
+      case 'cancelled': return 'default';
+      case 'unknown': return 'default';
+      // Legacy values fallback
       case 'allocated': return 'blue';
       case 'active': return 'cyan';
-      case 'suspended': return 'orange';
       case 'terminated': return 'red';
       case 'retired': return 'default';
       default: return 'default';
     }
   };
 
-  const getDisplayStatus = () => (sim.status as any) || (sim as any).resourceStatus || '-';
+  const getDisplayStatus = () => (sim as any).resourceStatus || '-';
 
   const formatDate = (val?: string) => (val ? new Date(val).toLocaleString() : '-');
 
   const getAvailableActions = () => {
-    const actions = [];
-    const status = String((sim.status as any) || (sim as any).resourceStatus || '').toLowerCase();
-    
+    const actions = [] as any[];
+    const status = String((sim as any).resourceStatus || '').toLowerCase();
+
     switch (status) {
       case 'available':
-      case 'allocated':
+      case 'standby':
+      case 'unknown':
         actions.push({
           key: 'activate',
           label: 'Activate',
@@ -226,7 +243,7 @@ const SimResourceDetail: React.FC = () => {
           },
         });
         break;
-      case 'active':
+      case 'reserved':
         actions.push({
           key: 'suspend',
           label: 'Suspend',
@@ -276,7 +293,7 @@ const SimResourceDetail: React.FC = () => {
           },
         });
         break;
-      case 'terminated':
+      case 'cancelled':
         actions.push({
           key: 'release',
           label: 'Release',
@@ -297,6 +314,8 @@ const SimResourceDetail: React.FC = () => {
           },
         });
         break;
+      case 'completed':
+        break;
     }
 
     if (status === 'available' && hasRole('sim_admin')) {
@@ -311,7 +330,7 @@ const SimResourceDetail: React.FC = () => {
         onClick: () => {
           Modal.confirm({
             title: 'Delete SIM Resource',
-            content: `Are you sure you want to delete SIM ${sim.iccid}? This action cannot be undone.`,
+            content: `Are you sure you want to delete SIM ${getChar(sim, 'ICCID')}? This action cannot be undone.`,
             okType: 'danger',
             onOk: () => deleteMutation.mutate(),
           });
@@ -325,16 +344,58 @@ const SimResourceDetail: React.FC = () => {
   const handleEdit = () => {
     form.setFieldsValue({
       description: sim.description || '',
-      imsi: sim.imsi || '',
+      imsi: getChar(sim, 'IMSI') || '',
+      name: sim.name || getChar(sim, 'ICCID') || '',
+      category: (sim as any)?.category || '',
+      administrativeState: (sim as any)?.administrativeState || '',
+      operationalState: (sim as any)?.operationalState || '',
+      usageState: (sim as any)?.usageState || '',
+      resourceStatus: String(getDisplayStatus() || '').toLowerCase(),
+      characteristics: (sim as any)?.resourceCharacteristic?.map((c: any) => ({
+        name: c?.name,
+        value: c?.value,
+        valueType: c?.valueType || 'string',
+      })) || [],
     });
     setEditModalVisible(true);
   };
 
   const handleUpdate = (values: any) => {
-    updateMutation.mutate({
-      ...values,
-      lastModifiedDate: new Date().toISOString(),
+    // Start from form-provided list so user explicitly controls add/update/delete
+    let rc: any[] = Array.isArray(values.characteristics)
+      ? values.characteristics
+          .filter((x: any) => x && x.name && (x.value !== undefined && x.value !== ''))
+          .map((x: any) => ({ name: x.name, value: x.value, valueType: x.valueType || 'string' }))
+      : [];
+
+    // Merge IMSI convenience field into characteristics (add/update/remove)
+    rc = rc.filter((c) => String(c.name).toLowerCase() !== 'imsi');
+    if (values.imsi !== undefined && String(values.imsi).trim() !== '') {
+      rc.push({ name: 'IMSI', value: values.imsi, valueType: 'string' });
+    }
+
+    // Deduplicate by name (case-insensitive); keep last occurrence
+    const dedup = new Map<string, any>();
+    rc.forEach((c) => {
+      const key = String(c.name || '').trim();
+      if (!key) return;
+      dedup.set(key.toLowerCase(), { name: key, value: c.value, valueType: c.valueType || 'string' });
     });
+    rc = Array.from(dedup.values());
+
+    const payload: any = {
+      description: values.description,
+      resourceCharacteristic: rc, // send full list; empty array clears all characteristics
+    };
+
+    if (values.name !== undefined && String(values.name).trim() !== '') payload.name = values.name;
+    if (values.category !== undefined && String(values.category).trim() !== '') payload.category = values.category;
+    if (values.administrativeState !== undefined && String(values.administrativeState).trim() !== '') payload.administrativeState = values.administrativeState;
+    if (values.operationalState !== undefined && String(values.operationalState).trim() !== '') payload.operationalState = values.operationalState;
+    if (values.usageState !== undefined && String(values.usageState).trim() !== '') payload.usageState = values.usageState;
+    if (values.resourceStatus !== undefined && String(values.resourceStatus).trim() !== '') payload.resourceStatus = values.resourceStatus;
+
+    updateMutation.mutate(payload);
   };
 
   const handleLifecycleAction = (values: any) => {
@@ -413,18 +474,21 @@ const SimResourceDetail: React.FC = () => {
           >
             <Descriptions column={{ xs: 1, sm: 2 }} bordered>
               <Descriptions.Item label={t('sim.iccid')}>
-                <Text copyable code>
-                  {sim.iccid}
+                <Text
+                  copyable={!!(getChar(sim, 'ICCID') || '-')} 
+                  code={!!(getChar(sim, 'ICCID') || '-')} 
+               >
+                  {getChar(sim, 'ICCID') || '-'}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.imsi')}>
-                <Text copyable={!!sim.imsi} code={!!sim.imsi}>
-                  {sim.imsi || '-'}
+                <Text copyable={!!getChar(sim, 'IMSI')} code={!!getChar(sim, 'IMSI')}>
+                  {getChar(sim, 'IMSI') || '-'}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.type')}>
-                <Tag color={sim.type === SimType.ESIM ? 'purple' : 'blue'}>
-                  {sim.type}
+                <Tag color={String(getChar(sim, 'SIMType') || (sim as any)?.type || '').toLowerCase().includes('esim') ? 'cyan' : 'blue'}>
+                  {getChar(sim, 'SIMType') || (sim as any)?.type || (sim as any)['@type'] || '-'}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.status')}>
@@ -432,11 +496,16 @@ const SimResourceDetail: React.FC = () => {
                   {getDisplayStatus()}
                 </Tag>
               </Descriptions.Item>
+              <Descriptions.Item label={t('sim.state')}>
+                <Tag color={getStatusColor(String(getChar(sim, 'RESOURCE_STATE') || ''))}>
+                  {getChar(sim, 'RESOURCE_STATE') || '-'}
+                </Tag>
+              </Descriptions.Item>
               <Descriptions.Item label={t('sim.batchId')}>
-                {sim.batchId || '-'}
+                {getChar(sim, 'BatchId') || '-'}
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.profileType')}>
-                {sim.profileType || '-'}
+                {getChar(sim, 'ProfileType') || '-'}
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.created')}>
                 {formatDate(sim.createdDate)}
@@ -444,7 +513,7 @@ const SimResourceDetail: React.FC = () => {
               <Descriptions.Item label={t('sim.lastModified')}>
                 {formatDate(sim.updatedDate || sim.lastModifiedDate)}
               </Descriptions.Item>
-              <Descriptions.Item label={t('common.description')} span={2}>
+              <Descriptions.Item label={t('common.description')}>
                 {sim.description || '-'}
               </Descriptions.Item>
             </Descriptions>
@@ -472,9 +541,9 @@ const SimResourceDetail: React.FC = () => {
                   children: (
                     <>
                       <div><strong>Created</strong></div>
-                      <div style={{ fontSize: 12, color: '#666' }}>
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                         {formatDate(sim.createdDate)}
-                      </div>
+                      </Typography.Text>
                     </>
                   ),
                 },
@@ -483,9 +552,9 @@ const SimResourceDetail: React.FC = () => {
                   children: (
                     <>
                       <div><strong>Status: {getDisplayStatus()}</strong></div>
-                      <div style={{ fontSize: 12, color: '#666' }}>
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                         {sim.createdDate ? new Date(sim.createdDate).toLocaleString() : ''}
-                      </div>
+                      </Typography.Text>
                     </>
                   ),
                 },
@@ -529,6 +598,105 @@ const SimResourceDetail: React.FC = () => {
           layout="vertical"
           onFinish={handleUpdate}
         >
+          <Title level={5}>Resource Characteristics</Title>
+          <Form.List name="characteristics">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Row key={key} gutter={8} align="middle" style={{ marginBottom: 8 }}>
+                    <Col xs={24} sm={7}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'name']}
+                        rules={[{ required: true, message: 'Name is required' }]}
+                        label={name === 0 ? 'Name' : undefined}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <Input placeholder="Name (e.g., IMSI)" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={13}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'value']}
+                        rules={[{ required: true, message: 'Value is required' }]}
+                        label={name === 0 ? 'Value' : undefined}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <Input placeholder="Value" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={4}>
+                      <Form.Item label={name === 0 ? ' ' : undefined} colon={false} style={{ marginBottom: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', height: 32 }}>
+                          <Button danger icon={<MinusCircleOutlined />} onClick={() => remove(name)} />
+                        </div>
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                ))}
+                <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add({ valueType: 'string' })}>
+                  Add Characteristic
+                </Button>
+                <Divider />
+              </>
+            )}
+          </Form.List>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Name" name="name">
+                <Input placeholder="Enter name" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Category" name="category">
+                <Input placeholder="Enter category" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Resource Status" name="resourceStatus">
+                <Select allowClear placeholder="Select status">
+                  {RESOURCE_STATUS_VALUES.map((s) => (
+                    <Select.Option key={s} value={s}>{s}</Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Administrative State" name="administrativeState">
+                <Select allowClear placeholder="Select administrative state">
+                  <Select.Option value="locked">locked</Select.Option>
+                  <Select.Option value="unlocked">unlocked</Select.Option>
+                  <Select.Option value="shutdown">shutdown</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Operational State" name="operationalState">
+                <Select allowClear placeholder="Select operational state">
+                  <Select.Option value="enable">enable</Select.Option>
+                  <Select.Option value="disable">disable</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Usage State" name="usageState">
+                <Select allowClear placeholder="Select usage state">
+                  <Select.Option value="idle">idle</Select.Option>
+                  <Select.Option value="active">active</Select.Option>
+                  <Select.Option value="busy">busy</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
           <Form.Item
             label="IMSI"
             name="imsi"
@@ -542,14 +710,8 @@ const SimResourceDetail: React.FC = () => {
             <Input placeholder="Enter IMSI" />
           </Form.Item>
 
-          <Form.Item
-            label="Description"
-            name="description"
-          >
-            <TextArea
-              rows={3}
-              placeholder="Enter description"
-            />
+          <Form.Item label="Description" name="description">
+            <TextArea rows={3} placeholder="Enter description" />
           </Form.Item>
 
           <div style={{ textAlign: 'right' }}>
@@ -584,8 +746,8 @@ const SimResourceDetail: React.FC = () => {
             Are you sure you want to <strong>{actionLabels[selectedAction!]?.toLowerCase()}</strong> this SIM resource?
           </p>
           
-          <div style={{ padding: '8px 12px', backgroundColor: '#f5f5f5', borderRadius: 4, margin: '16px 0' }}>
-            <Text code>{sim.iccid}</Text>
+          <div style={{ padding: '8px 12px', backgroundColor: 'var(--table-row-hover-bg)', borderRadius: 4, margin: '16px 0' }}>
+            <Text code>{getChar(sim, 'ICCID')}</Text>
           </div>
 
           {(selectedAction === LifecycleAction.SUSPEND || selectedAction === LifecycleAction.TERMINATE || selectedAction === LifecycleAction.RETIRE) && (

@@ -25,12 +25,14 @@ import {
 } from '@ant-design/icons';
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import { useTranslation } from 'react-i18next';
+import ThemeSettingsDrawer from '../common/ThemeSettingsDrawer';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { userInfo, logout, hasRole } = useKeycloak();
@@ -163,6 +165,8 @@ const MainLayout: React.FC = () => {
         width={250}
         style={{
           boxShadow: '2px 0 6px rgba(0,21,41,.1)',
+          background: 'var(--sidebar-bg)',
+          color: 'var(--sidebar-text)'
         }}
       >
         <div 
@@ -172,19 +176,20 @@ const MainLayout: React.FC = () => {
             alignItems: 'center',
             justifyContent: collapsed ? 'center' : 'flex-start',
             padding: collapsed ? '0' : '0 16px',
-            borderBottom: '1px solid #f0f0f0',
+            borderBottom: '1px solid var(--header-border-color)',
+            color: 'var(--sidebar-text)'
           }}
         >
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <IdcardOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+              <IdcardOutlined style={{ fontSize: 24, color: 'var(--primary-color)' }} />
               <Text strong style={{ fontSize: 16 }}>
                 {t('app.title')}
               </Text>
             </div>
           )}
           {collapsed && (
-            <IdcardOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+            <IdcardOutlined style={{ fontSize: 24, color: 'var(--primary-color)' }} />
           )}
         </div>
         
@@ -195,7 +200,7 @@ const MainLayout: React.FC = () => {
           defaultOpenKeys={getOpenKeys()}
           items={menuItems}
           onClick={handleMenuClick}
-          style={{ borderRight: 0 }}
+          style={{ borderRight: 0, background: 'var(--sidebar-bg)', color: 'var(--sidebar-text)' }}
         />
       </Sider>
       
@@ -203,11 +208,12 @@ const MainLayout: React.FC = () => {
         <Header
           style={{
             padding: '0 16px',
-            background: colorBgContainer,
+            background: 'var(--navbar-bg)',
             boxShadow: '0 2px 8px rgba(0,21,41,.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            color: 'var(--navbar-text)'
           }}
         >
           <Button
@@ -218,10 +224,19 @@ const MainLayout: React.FC = () => {
               fontSize: '16px',
               width: 64,
               height: 64,
+              color: 'var(--navbar-text)'
             }}
           />
           
           <Space size="large">
+            <Button
+              type="text"
+              icon={<SettingOutlined />}
+              onClick={() => setThemeOpen(true)}
+              style={{ fontSize: '16px', color: 'var(--navbar-text)' }}
+            >
+              {t('theme.button', { defaultValue: 'Tema' })}
+            </Button>
             <Dropdown
               menu={{
                 items: [
@@ -235,7 +250,7 @@ const MainLayout: React.FC = () => {
               placement="bottomRight"
               trigger={['click']}
             >
-              <Button type="text" style={{ fontSize: 14 }}>
+              <Button type="text" style={{ fontSize: 14, color: 'var(--navbar-text)' }}>
                 {i18n.language?.toUpperCase() || 'EN'}
               </Button>
             </Dropdown>
@@ -263,9 +278,9 @@ const MainLayout: React.FC = () => {
                   <div style={{ fontSize: '14px', fontWeight: 500, margin: 0 }}>
                     {userInfo?.name || userInfo?.preferred_username || 'User'}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666', margin: 0 }}>
+                  <Text type="secondary" style={{ fontSize: '12px', margin: 0 }}>
                     {userInfo?.email}
-                  </div>
+                  </Text>
                 </div>
               </Space>
             </Dropdown>
@@ -278,11 +293,13 @@ const MainLayout: React.FC = () => {
             padding: 24,
             minHeight: 280,
             background: colorBgContainer,
-            borderRadius: 6,
+            borderRadius: 'var(--border-radius)',
           }}
         >
           <Outlet />
         </Content>
+
+        <ThemeSettingsDrawer open={themeOpen} onClose={() => setThemeOpen(false)} />
       </Layout>
     </Layout>
   );

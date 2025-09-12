@@ -330,5 +330,5 @@ For technical support and questions:
 **Version**: 1.0.0  
 **Last Updated**: 2024-01-01  
 **Minimum Node Version**: 16.0.0
-#   s i m - i n v e n t o r y - u i  
- 
+node translate.js --source=en --languages=tr,de,fr --ignoreQuota
+When you add credits and want full automatic translation, switch back to --overwrite (without --ignoreQuota).

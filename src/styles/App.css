@@ -1,61 +1,102 @@
+:root {
+  --navbar-bg: #ffffff;
+  --navbar-text: #1f1f1f;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #1f1f1f;
+  --page-bg: #f5f5f5;
+  --card-bg: #ffffff;
+  --text-color: #1f1f1f;
+  --primary-color: #1677ff;
+  --border-radius: 6px;
+  --font-size-base: 14px;
+  --menu-active-bg: rgba(22, 119, 255, 0.15);
+  --menu-active-text: #1677ff;
+  --table-row-hover-bg: #f5f5f5;
+  --header-border-color: #f0f0f0;
+  --link-color: #1677ff;
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #ff4d4f;
+  --info-color: #13c2c2;
+  --text-color-secondary: #8c8c8c;
+}
+
 .app {
   min-height: 100vh;
-  background-color: #f0f2f5;
+  background-color: var(--page-bg);
 }
 
 /* Main layout adjustments */
 .ant-layout {
-  background: #f0f2f5;
+  background: var(--page-bg);
 }
 
 .ant-layout-content {
-  background: #f0f2f5;
+  background: var(--page-bg);
 }
 
 /* Header customizations */
 .ant-layout-header {
   padding: 0 16px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 21, 41, 0.1);
-  border-bottom: 1px solid #f0f0f0;
+  background: var(--navbar-bg);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color) 10%, transparent);
+  border-bottom: 1px solid var(--header-border-color);
+  color: var(--navbar-text);
 }
 
 /* Sider customizations */
 .ant-layout-sider-light {
-  background: #fff;
-  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.1);
+  background: var(--sidebar-bg);
+  box-shadow: 2px 0 6px color-mix(in srgb, var(--text-color) 10%, transparent);
+  color: var(--sidebar-text);
 }
 
 .ant-layout-sider-light .ant-layout-sider-trigger {
-  background: #fff;
-  color: #001529;
-  border-top: 1px solid #f0f0f0;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-top: 1px solid var(--header-border-color);
 }
 
 /* Menu customizations */
 .ant-menu-light {
   border-right: none;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
 }
 
 .ant-menu-item-selected {
-  background-color: #e6f7ff !important;
+  background-color: var(--menu-active-bg) !important;
+}
+
+.ant-menu-item-selected,
+.ant-menu-item-selected a {
+  color: var(--menu-active-text) !important;
+}
+
+/* Links */
+a {
+  color: var(--link-color);
+}
+a:hover {
+  color: color-mix(in srgb, var(--link-color) 85%, black);
 }
 
 .ant-menu-submenu-selected {
-  color: #1890ff !important;
+  color: var(--menu-active-text) !important;
 }
 
 /* Card enhancements */
 .ant-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color) 6%, transparent);
   margin-bottom: 16px;
+  background: var(--card-bg);
 }
 
 .ant-card-head {
-  border-bottom: 1px solid #f0f0f0;
-  background: #fafafa;
-  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid var(--header-border-color);
+  background: var(--card-bg);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 .ant-card-body {
@@ -64,60 +105,60 @@
 
 /* Table customizations */
 .ant-table {
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   overflow: hidden;
 }
 
 .ant-table-thead > tr > th {
-  background: #fafafa;
-  color: #262626;
+  background: var(--card-bg);
+  color: var(--text-color);
   font-weight: 600;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid var(--header-border-color);
 }
 
 .ant-table-tbody > tr:hover > td {
-  background: #f5f5f5;
+  background: var(--table-row-hover-bg);
 }
 
 /* Button customizations */
 .ant-btn-primary {
-  background: #1890ff;
-  border-color: #1890ff;
-  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.4);
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--primary-color) 40%, transparent);
 }
 
 .ant-btn-primary:hover,
 .ant-btn-primary:focus {
-  background: #40a9ff;
-  border-color: #40a9ff;
-  box-shadow: 0 4px 8px rgba(24, 144, 255, 0.5);
+  background: color-mix(in srgb, var(--primary-color) 80%, white);
+  border-color: color-mix(in srgb, var(--primary-color) 80%, white);
+  box-shadow: 0 4px 8px color-mix(in srgb, var(--primary-color) 50%, transparent);
 }
 
 /* Form enhancements */
 .ant-form-item-label > label {
   font-weight: 600;
-  color: #262626;
+  color: var(--text-color);
 }
 
 .ant-input,
 .ant-select-selector,
 .ant-picker {
-  border-radius: 6px;
-  border: 1px solid #d9d9d9;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--header-border-color);
   transition: all 0.3s;
 }
 
 .ant-input:hover,
 .ant-select-selector:hover,
 .ant-picker:hover {
-  border-color: #40a9ff;
+  border-color: var(--primary-color);
 }
 
 .ant-input:focus,
 .ant-select-focused .ant-select-selector,
 .ant-picker-focused {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent);
 }
 
 /* Tag enhancements */
@@ -134,19 +175,19 @@
 }
 
 .ant-modal-header {
-  background: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--header-border-color);
 }
 
 .ant-modal-title {
   font-weight: 600;
-  color: #262626;
+  color: var(--text-color);
 }
 
 /* Dropdown enhancements */
 .ant-dropdown {
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--text-color) 15%, transparent);
 }
 
 /* Pagination enhancements */
@@ -156,31 +197,32 @@
 }
 
 .ant-pagination-item-active {
-  background: #1890ff;
-  border-color: #1890ff;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .ant-pagination-item-active a {
-  color: #fff;
+  color: white;
 }
 
 /* Statistic enhancements */
 .ant-statistic-title {
-  color: #8c8c8c;
+  color: var(--text-color);
+  opacity: 0.75;
   font-size: 14px;
   margin-bottom: 4px;
 }
 
 .ant-statistic-content {
-  color: #262626;
+  color: var(--text-color);
   font-size: 24px;
   font-weight: 600;
 }
 
 /* Timeline enhancements */
 .ant-timeline-item-head {
-  background-color: #fff;
-  border: 2px solid #1890ff;
+  background-color: var(--card-bg);
+  border: 2px solid var(--primary-color);
 }
 
 .ant-timeline-item-content {
@@ -206,19 +248,19 @@
 /* Upload enhancements */
 .ant-upload-drag {
   border-radius: 8px;
-  border: 2px dashed #d9d9d9;
-  background: #fafafa;
+  border: 2px dashed var(--header-border-color);
+  background: var(--card-bg);
   transition: all 0.3s;
 }
 
 .ant-upload-drag:hover {
-  border-color: #1890ff;
-  background: #f0f9ff;
+  border-color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 8%, var(--card-bg));
 }
 
 .ant-upload-drag.ant-upload-drag-hover {
-  border-color: #1890ff;
-  background: #f0f9ff;
+  border-color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 8%, var(--card-bg));
 }
 
 /* Uploader (compact) overrides for smaller height and better responsiveness */
@@ -268,39 +310,97 @@
 
 /* Badge enhancements */
 .ant-badge-count {
-  background: #ff4d4f;
-  box-shadow: 0 0 0 1px #fff;
+  background: var(--error-color);
+  box-shadow: 0 0 0 1px var(--card-bg);
 }
 
 /* Descriptions enhancements */
 .ant-descriptions-bordered .ant-descriptions-row > th,
 .ant-descriptions-bordered .ant-descriptions-row > td {
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--header-border-color);
 }
 
 .ant-descriptions-bordered .ant-descriptions-row > th {
-  background: #fafafa;
+  background: var(--card-bg);
 }
 
 /* Steps enhancements */
 .ant-steps-item-process .ant-steps-item-icon {
-  background: #1890ff;
-  border-color: #1890ff;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .ant-steps-item-finish .ant-steps-item-icon {
-  background: #52c41a;
-  border-color: #52c41a;
+  background: var(--success-color);
+  border-color: var(--success-color);
 }
 
 /* Result enhancements */
 .ant-result-title {
-  color: #262626;
+  color: var(--text-color);
   font-weight: 600;
 }
 
 .ant-result-subtitle {
-  color: #8c8c8c;
+  color: var(--text-color);
+  opacity: 0.75;
+}
+
+/* Default/neutral Tag mapped to secondary text color (light variant) */
+.ant-tag {
+  color: var(--text-color-secondary);
+  background: color-mix(in srgb, var(--text-color-secondary) var(--tag-light-bg-strength, 12%), transparent);
+  border-color: color-mix(in srgb, var(--text-color-secondary) var(--tag-light-border-strength, 35%), transparent);
+}
+
+/* Tag Light Variants mapped to theme semantic colors */
+.ant-tag-green,
+.ant-tag-success {
+  color: var(--success-color) !important;
+  background: color-mix(in srgb, var(--success-color) var(--tag-light-bg-strength, 12%), transparent) !important;
+  border-color: color-mix(in srgb, var(--success-color) var(--tag-light-border-strength, 35%), transparent) !important;
+}
+
+.ant-tag-red,
+.ant-tag-error {
+  color: var(--error-color) !important;
+  background: color-mix(in srgb, var(--error-color) var(--tag-light-bg-strength, 12%), transparent) !important;
+  border-color: color-mix(in srgb, var(--error-color) var(--tag-light-border-strength, 35%), transparent) !important;
+}
+
+.ant-tag-orange,
+.ant-tag-warning,
+.ant-tag-gold {
+  color: var(--warning-color) !important;
+  background: color-mix(in srgb, var(--warning-color) var(--tag-light-bg-strength, 12%), transparent) !important;
+  border-color: color-mix(in srgb, var(--warning-color) var(--tag-light-border-strength, 35%), transparent) !important;
+}
+
+.ant-tag-cyan {
+  color: var(--info-color) !important;
+  background: color-mix(in srgb, var(--info-color) var(--tag-light-bg-strength, 12%), transparent) !important;
+  border-color: color-mix(in srgb, var(--info-color) var(--tag-light-border-strength, 35%), transparent) !important;
+}
+
+.ant-tag-processing,
+.ant-tag-blue,
+.ant-tag-geekblue {
+  color: var(--primary-color) !important;
+  background: color-mix(in srgb, var(--primary-color) var(--tag-light-bg-strength, 12%), transparent) !important;
+  border-color: color-mix(in srgb, var(--primary-color) var(--tag-light-border-strength, 35%), transparent) !important;
+}
+
+/* Additional Tag variants used in app status mapping */
+.ant-tag-purple {
+  color: var(--primary-color) !important;
+  background: color-mix(in srgb, var(--primary-color) var(--tag-light-bg-strength, 12%), transparent) !important;
+  border-color: color-mix(in srgb, var(--primary-color) var(--tag-light-border-strength, 35%), transparent) !important;
+}
+
+.ant-tag-volcano {
+  color: var(--warning-color) !important;
+  background: color-mix(in srgb, var(--warning-color) var(--tag-light-bg-strength, 12%), transparent) !important;
+  border-color: color-mix(in srgb, var(--warning-color) var(--tag-light-border-strength, 35%), transparent) !important;
 }
 
 /* Responsive utilities */

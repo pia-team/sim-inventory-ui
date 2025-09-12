@@ -128,8 +128,8 @@ const CreateSimOrder: React.FC = () => {
     }
 
     const request: CreateSimOrderRequest = {
-      description: values.description,
-      priority: values.priority,
+      ...(values.description && String(values.description).trim() !== '' ? { description: values.description } : {}),
+      ...(values.priority && String(values.priority).trim() !== '' ? { priority: values.priority } : {}),
       requestedStartDate: values.requestedStartDate?.toISOString(),
       requestedCompletionDate: values.requestedCompletionDate?.toISOString(),
       orderItem: orderItems.map(item => ({
@@ -137,7 +137,7 @@ const CreateSimOrder: React.FC = () => {
         action: item.action,
         resource: item.resource,
       })),
-      note: values.notes ? [{
+      note: values.notes && String(values.notes).trim() !== '' ? [{
         text: values.notes,
         author: 'Current User', // This should come from Keycloak context
         date: new Date().toISOString(),
@@ -173,20 +173,28 @@ const CreateSimOrder: React.FC = () => {
     return actions;
   };
 
+  const getChar = (resource: SimResource | undefined, key: string) =>
+    resource?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
+
   const orderItemColumns = [
     {
       title: 'ICCID',
       key: 'iccid',
       render: (_: any, record: OrderItem) => (
         <span style={{ fontFamily: 'monospace' }}>
-          {record.resource?.iccid}
+          {getChar(record.resource, 'ICCID') || '-'}
         </span>
       ),
     },
     {
-      title: 'Current Status',
+      title: 'Status',
       key: 'status',
-      render: (_: any, record: OrderItem) => (record.resource as any)?.status || (record.resource as any)?.resourceStatus || '-',
+      render: (_: any, record: OrderItem) => (record.resource as any)?.resourceStatus || (record.resource as any)?.status || '-',
+    },
+    {
+      title: 'State',
+      key: 'state',
+      render: (_: any, record: OrderItem) => getChar(record.resource, 'RESOURCE_STATE') || '-',
     },
     {
       title: 'Action',
@@ -235,8 +243,8 @@ const CreateSimOrder: React.FC = () => {
       title: 'ICCID',
       dataIndex: 'iccid',
       key: 'iccid',
-      render: (iccid: string) => (
-        <span style={{ fontFamily: 'monospace' }}>{iccid}</span>
+      render: (_: any, record: SimResource) => (
+        <span style={{ fontFamily: 'monospace' }}>{getChar(record, 'ICCID') || '-'}</span>
       ),
     },
     {
@@ -246,8 +254,13 @@ const CreateSimOrder: React.FC = () => {
     },
     {
       title: 'Status',
-      dataIndex: 'status',
       key: 'status',
+      render: (_: any, record: SimResource) => (record as any)?.resourceStatus || (record as any)?.status || '-',
+    },
+    {
+      title: 'State',
+      key: 'state',
+      render: (_: any, record: SimResource) => getChar(record, 'RESOURCE_STATE') || '-',
     },
     {
       title: 'Actions',
@@ -367,8 +380,8 @@ const CreateSimOrder: React.FC = () => {
             }
           >
             {orderItems.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 20, color: '#666' }}>
-                No SIMs added yet
+              <div style={{ textAlign: 'center', padding: 20 }}>
+                <Typography.Text type="secondary">No SIMs added yet</Typography.Text>
               </div>
             ) : (
               <Table

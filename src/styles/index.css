@@ -21,17 +21,17 @@ code {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--card-bg);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: color-mix(in srgb, var(--text-color) 25%, transparent);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: color-mix(in srgb, var(--text-color) 35%, transparent);
 }
 
 /* Loading spinner container */
@@ -45,16 +45,16 @@ code {
 
 /* Table row error styling */
 .row-error {
-  background-color: #fff2f0 !important;
+  background-color: color-mix(in srgb, var(--error-color) 8%, var(--card-bg)) !important;
 }
 
 .row-error:hover {
-  background-color: #ffece6 !important;
+  background-color: color-mix(in srgb, var(--error-color) 12%, var(--card-bg)) !important;
 }
 
 /* Custom table styles */
 .ant-table-thead > tr > th {
-  background-color: #fafafa !important;
+  background-color: var(--card-bg) !important;
   font-weight: 600;
 }
 
@@ -73,7 +73,7 @@ code {
 }
 
 .ant-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 21, 41, 0.1);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--text-color) 10%, transparent);
 }
 
 /* Button hover effects */
@@ -81,20 +81,17 @@ code {
   transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
-/* Progress bar custom styles */
-.ant-progress-line {
-  margin-bottom: 8px;
-}
+ 
 
 /* Form validation styles */
 .ant-form-item-has-error .ant-input {
-  border-color: #ff4d4f;
-  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+  border-color: var(--error-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--error-color) 20%, transparent);
 }
 
 .ant-form-item-has-error .ant-select-selector {
-  border-color: #ff4d4f !important;
-  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+  border-color: var(--error-color) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--error-color) 20%, transparent) !important;
 }
 
 /* Custom notification styles */
@@ -144,7 +141,7 @@ code {
 
   .ant-card {
     box-shadow: none !important;
-    border: 1px solid #d9d9d9;
+    border: 1px solid var(--header-border-color);
   }
 
   body {
@@ -156,17 +153,11 @@ code {
 .ant-btn:focus,
 .ant-input:focus,
 .ant-select-selector:focus {
-  outline: 2px solid #1890ff;
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-color: #ffffff;
-    --background-color: #001529;
-  }
-}
+/* OS preferred color scheme is intentionally ignored to prioritize user-selected theme */
 
 /* Animation keyframes */
 @keyframes fadeIn {
@@ -207,21 +198,21 @@ code {
 
 /* Status specific colors */
 .status-available {
-  color: #52c41a !important;
+  color: var(--success-color) !important;
 }
 
 .status-active {
-  color: #13c2c2 !important;
+  color: var(--info-color) !important;
 }
 
 .status-suspended {
-  color: #faad14 !important;
+  color: var(--warning-color) !important;
 }
 
 .status-terminated {
-  color: #ff4d4f !important;
+  color: var(--error-color) !important;
 }
 
 .status-retired {
-  color: #d9d9d9 !important;
+  color: var(--text-color-secondary) !important;
 }

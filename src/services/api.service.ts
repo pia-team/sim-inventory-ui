@@ -10,7 +10,6 @@ import {
   BatchSimImportResponse,
   PaginatedResponse,
   ApiResponse,
-  SimType,
   BulkResourceCreateRequest,
 } from '../types/sim.types';
 
@@ -125,15 +124,66 @@ class ApiService {
       });
     }
 
-    // Default sorting to createdDate if not explicitly provided
+    // Default sorting to -createdDate (descending) if not explicitly provided
     if (!params.has('sort')) {
-      params.set('sort', 'createdDate');
+      params.set('sort', '-createdDate');
     }
 
-    // Compatibility: some backends expect resourceStatus instead of status
-    if (params.has('status')) {
-      const vals = params.getAll('status');
-      vals.forEach(v => params.append('resourceStatus', v));
+    // Compatibility: /resource expects only 'resourceStatus'.
+    // Merge any provided 'status' and 'resourceStatus' values, normalize, and send as a single
+    // comma-separated 'resourceStatus' param (e.g., resourceStatus=available,assigned).
+    if (params.has('status') || params.has('resourceStatus')) {
+      const collected: string[] = [];
+      if (params.has('status')) {
+        collected.push(...params.getAll('status'));
+        params.delete('status');
+      }
+      if (params.has('resourceStatus')) {
+        collected.push(...params.getAll('resourceStatus'));
+        params.delete('resourceStatus');
+      }
+
+      const normalized = collected
+        .flatMap(v => String(v).split(','))
+        .map(v => v.trim())
+        .filter(Boolean)
+        .map(v => v.toLowerCase());
+
+      if (normalized.length) {
+        const unique = Array.from(new Set(normalized));
+        params.set('resourceStatus', unique.join(','));
+      }
+    }
+
+    // Map UI batchId filter to TMF characteristic query (BatchId stored in resourceCharacteristic)
+    if (params.has('batchId')) {
+      const vals = params.getAll('batchId');
+      params.delete('batchId');
+      // Support multiple values by repeating value param; name stays 'BatchId'
+      if (vals.length) {
+        params.append('resourceCharacteristic.name', 'BatchId');
+        vals.forEach(v => params.append('resourceCharacteristic.value', v));
+      }
+    }
+
+    // Map UI imsi filter to TMF characteristic query (IMSI stored in resourceCharacteristic)
+    if (params.has('imsi')) {
+      const vals = params.getAll('imsi');
+      params.delete('imsi');
+      if (vals.length) {
+        params.append('resourceCharacteristic.name', 'IMSI');
+        vals.forEach(v => params.append('resourceCharacteristic.value', v));
+      }
+    }
+
+    // Map UI iccid filter to TMF characteristic query (ICCID stored in resourceCharacteristic)
+    if (params.has('iccid')) {
+      const vals = params.getAll('iccid');
+      params.delete('iccid');
+      if (vals.length) {
+        params.append('resourceCharacteristic.name', 'ICCID');
+        vals.forEach(v => params.append('resourceCharacteristic.value', v));
+      }
     }
 
     return this.handleResponse(
@@ -149,12 +199,6 @@ class ApiService {
 
   async createSimResource(request: CreateSimResourceRequest): Promise<ApiResponse<SimResource>> {
     // Build a payload that strictly adheres to the Swagger schema (ResourceCreate oneOf types)
-    const ensureChar = (arr: any[], name: string, value?: any) => {
-      if (value === undefined || value === null || value === '') return;
-      if (!arr.some((c: any) => String(c.name).toLowerCase() === name.toLowerCase())) {
-        arr.push({ name, value, valueType: 'string' });
-      }
-    };
 
     const chars: any[] = [];
     // Include any incoming characteristics as-is (if provided)
@@ -166,15 +210,13 @@ class ApiService {
       });
     }
 
-    // Map domain-specific fields into characteristics to avoid non-schema top-level props
-    ensureChar(chars, 'ICCID', (request as any).iccid);
-    ensureChar(chars, 'SIMType', (request as any).type);
-    ensureChar(chars, 'ProfileType', (request as any).profileType);
-    ensureChar(chars, 'BatchId', (request as any).batchId);
+    // Characteristic-only model
+    const simTypeChar = chars.find((c: any) => String(c.name).toLowerCase() === 'simtype')?.value;
+    const iccidChar = chars.find((c: any) => String(c.name).toLowerCase() === 'iccid')?.value;
 
     const payload: any = {
-      '@type': (request as any)['@type'] || ((request as any).type === SimType.ESIM ? 'LogicalResource' : 'PhysicalResource'),
-      name: (request as any).name || (request as any).iccid,
+      '@type': (request as any)['@type'] || (String(simTypeChar || '').toLowerCase().includes('esim') ? 'LogicalResource' : 'PhysicalResource'),
+      name: (request as any).name || iccidChar,
       description: (request as any).description,
     };
     if (chars.length) payload.resourceCharacteristic = chars;
@@ -186,7 +228,11 @@ class ApiService {
 
   async updateSimResource(id: string, request: UpdateSimResourceRequest): Promise<ApiResponse<SimResource>> {
     return this.handleResponse(
-      this.api.patch<SimResource>(`/resource/${id}`, request)
+      this.api.patch<SimResource>(`/resource/${id}`, request, {
+        headers: {
+          'Content-Type': 'application/merge-patch+json;charset=utf-8',
+        },
+      })
     );
   }
 
@@ -260,6 +306,11 @@ class ApiService {
       });
     }
 
+    // Default sorting to -orderDate (descending) if not explicitly provided
+    if (!searchParams.has('sort')) {
+      searchParams.set('sort', '-orderDate');
+    }
+
     return this.handleResponse(
       this.orderApi.get<PaginatedResponse<SimOrder>>('/resourceOrder', { params: searchParams })
     );
@@ -283,34 +334,77 @@ class ApiService {
     );
   }
 
-  // Lifecycle Management APIs
-  async activateSimResource(id: string): Promise<ApiResponse<SimResource>> {
+  // Helper: upsert a single characteristic by name while preserving other characteristics
+  private async upsertResourceCharacteristic(
+    id: string,
+    name: string,
+    value: any,
+    extraPatch?: Record<string, any>
+  ): Promise<ApiResponse<SimResource>> {
+    let existing: SimResource | undefined;
+    try {
+      const read = await this.api.get<SimResource>(`/resource/${id}`);
+      existing = read.data;
+    } catch (e) {
+      // If GET fails, continue with only the upserted characteristic (best-effort)
+      existing = undefined;
+    }
+
+    const current = Array.isArray(existing?.resourceCharacteristic)
+      ? [...(existing!.resourceCharacteristic as any[])]
+      : [];
+
+    const idx = current.findIndex(
+      (c: any) => String(c?.name || '').toLowerCase() === String(name).toLowerCase()
+    );
+    if (idx >= 0) {
+      current[idx] = {
+        ...current[idx],
+        name,
+        value,
+        valueType: (current[idx] as any)?.valueType || 'string',
+      };
+    } else {
+      current.push({ name, value, valueType: 'string' });
+    }
+
+    const body: any = { resourceCharacteristic: current, ...(extraPatch || {}) };
     return this.handleResponse(
-      this.api.post<SimResource>(`/resource/${id}/activate`, {})
+      this.api.patch<SimResource>(`/resource/${id}`, body, {
+        headers: { 'Content-Type': 'application/merge-patch+json;charset=utf-8' },
+      })
     );
   }
 
+  // Lifecycle Management APIs
+  async activateSimResource(id: string): Promise<ApiResponse<SimResource>> {
+    // Set characteristic RESOURCE_STATE to 'active'
+    return this.upsertResourceCharacteristic(id, 'RESOURCE_STATE', 'active');
+  }
+
   async suspendSimResource(id: string, reason?: string): Promise<ApiResponse<SimResource>> {
-    return this.handleResponse(
-      this.api.post<SimResource>(`/resource/${id}/suspend`, { reason })
+    // Set characteristic RESOURCE_STATE to 'suspended'
+    return this.upsertResourceCharacteristic(id, 'RESOURCE_STATE', 'suspended',
+      reason ? { statusReason: reason } : undefined
     );
   }
 
   async terminateSimResource(id: string, reason?: string): Promise<ApiResponse<SimResource>> {
-    return this.handleResponse(
-      this.api.post<SimResource>(`/resource/${id}/terminate`, { reason })
+    // Set characteristic RESOURCE_STATE to 'terminated'
+    return this.upsertResourceCharacteristic(id, 'RESOURCE_STATE', 'terminated',
+      reason ? { statusReason: reason } : undefined
     );
   }
 
   async releaseSimResource(id: string): Promise<ApiResponse<SimResource>> {
-    return this.handleResponse(
-      this.api.post<SimResource>(`/resource/${id}/release`, {})
-    );
+    // Set characteristic RESOURCE_STATE to 'available'
+    return this.upsertResourceCharacteristic(id, 'RESOURCE_STATE', 'available');
   }
 
   async retireSimResource(id: string, reason?: string): Promise<ApiResponse<SimResource>> {
-    return this.handleResponse(
-      this.api.post<SimResource>(`/resource/${id}/retire`, { reason })
+    // Set characteristic RESOURCE_STATE to 'retired'
+    return this.upsertResourceCharacteristic(id, 'RESOURCE_STATE', 'retired',
+      reason ? { statusReason: reason } : undefined
     );
   }
 
@@ -365,7 +459,7 @@ class ApiService {
     let reportedTotal: number | undefined = undefined;
 
     while (hasNext && iterations < maxIterations) {
-      const resp = await this.api.get<any>('/resource', { params: { limit, offset, sort: 'createdDate' } });
+      const resp = await this.api.get<any>('/resource', { params: { limit, offset, sort: '-createdDate' } });
       const data = resp.data;
       let page: any[] = [];
 
@@ -414,7 +508,7 @@ class ApiService {
         case 'retired': counts.retired++; break;
       }
 
-      const typeStr = String(sim?.type || sim?.['@type'] || sim?.resourceSpecification?.name || '').toLowerCase();
+      const typeStr = String(getChar(sim, 'SIMType') || sim?.['@type'] || sim?.resourceSpecification?.name || '').toLowerCase();
       const normalizedType = typeStr.includes('esim') ? 'eSIM' : (typeStr ? 'Physical' : 'Unknown');
       byType[normalizedType] = (byType[normalizedType] || 0) + 1;
 

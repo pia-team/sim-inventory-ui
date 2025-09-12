@@ -74,10 +74,6 @@ const CreateSimResource: React.FC = () => {
     ensureChar(resourceChars, 'BatchId', values.batchId);
     const request: CreateSimResourceRequest = {
       '@type': values.type === SimType.ESIM ? 'LogicalResource' : 'PhysicalResource',
-      iccid: values.iccid,
-      type: values.type,
-      profileType: values.profileType || undefined,
-      batchId: values.batchId || undefined,
       description: values.description || undefined,
       name: values.name || values.iccid,
       resourceCharacteristic: resourceChars.length ? resourceChars : undefined,
@@ -228,9 +224,9 @@ const CreateSimResource: React.FC = () => {
               <Divider />
 
               <Title level={4}>{t('createSim.additionalCharacteristics')}</Title>
-              <p style={{ color: '#666', marginBottom: 16 }}>
+              <Typography.Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
                 {t('createSim.additionalHelp')} Format: <code>key: value</code>
-              </p>
+              </Typography.Text>
 
               <Form.Item
                 label={t('createSim.characteristicsLabel')}

@@ -14,6 +14,7 @@ import {
   Col,
   DatePicker,
   Typography,
+  Tooltip,
 } from 'antd';
 import {
   SearchOutlined,
@@ -39,7 +40,7 @@ const { Title } = Typography;
 
 const SimOrderList: React.FC = () => {
   const navigate = useNavigate();
-  const { hasRole } = useKeycloak();
+  const { hasRole, authenticated, token } = useKeycloak();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -51,7 +52,7 @@ const SimOrderList: React.FC = () => {
   }>({
     limit: 20,
     offset: 0,
-    sort: 'orderDate',
+    sort: '-orderDate',
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,7 +61,7 @@ const SimOrderList: React.FC = () => {
 
   // Fetch SIM orders
   const { data: response, isLoading, refetch } = useQuery(
-    ['simOrders', searchParams, currentPage, pageSize],
+    ['simOrders', token, searchParams, currentPage, pageSize],
     () => apiService.getSimOrders({
       ...searchParams,
       limit: pageSize,
@@ -68,6 +69,12 @@ const SimOrderList: React.FC = () => {
     }),
     {
       keepPreviousData: true,
+      enabled: authenticated && !!token,
+      onError: (error: any) => {
+        message.error(`${t('app.error')}: ${error?.response?.data?.message || error?.message || 'Unknown error'}`);
+        // eslint-disable-next-line no-console
+        console.error('simOrders error', error);
+      },
     }
   );
 
@@ -85,8 +92,20 @@ const SimOrderList: React.FC = () => {
     }
   );
 
-  const orders = response?.data?.data || [];
-  const totalCount = response?.data?.totalCount || 0;
+  const apiData = response?.data as any;
+  const toArray = (payload: any): any[] => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.items)) return payload.items;
+    if (Array.isArray(payload?.content)) return payload.content;
+    if (Array.isArray(payload?.results)) return payload.results;
+    return [];
+  };
+  const orders = toArray(apiData);
+  const totalCount = typeof apiData?.totalCount === 'number'
+    ? apiData.totalCount
+    : (typeof apiData?.total === 'number' ? apiData.total : orders.length);
 
   const handleSearch = useCallback((value: string) => {
     // For orders, we might search by ID or description
@@ -163,22 +182,33 @@ const SimOrderList: React.FC = () => {
       title: t('order.orderId'),
       dataIndex: 'id',
       key: 'id',
-      width: 120,
-      render: (id: string) => (
-        <Button
-          type="link"
-          onClick={() => navigate(`/sim-orders/${id}`)}
-          style={{ padding: 0, fontFamily: 'monospace' }}
-        >
-          {id.substring(0, 8)}...
-        </Button>
-      ),
+      width: 160,
+      fixed: 'left' as const,
+      onCell: () => ({ style: { whiteSpace: 'nowrap' } }),
+      ellipsis: true,
+      render: (id: string) => {
+        const shortId = id ? (id.length > 12 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id) : '-';
+        return (
+          <Tooltip title={id} placement="topLeft">
+            <Button
+              type="link"
+              onClick={() => navigate(`/sim-orders/${id}`)}
+              style={{ padding: 0 }}
+            >
+              <Typography.Text code copyable={{ text: id }} style={{ fontFamily: 'monospace'}}>
+                {shortId}
+              </Typography.Text>
+            </Button>
+          </Tooltip>
+        );
+      },
     },
     {
       title: t('order.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 140,
+      width: 100,
+      align: 'center' as const,
       render: (_: any, record: SimOrder) => {
         const st = getDisplayState(record) as string;
         return (
@@ -192,21 +222,32 @@ const SimOrderList: React.FC = () => {
       title: t('order.items'),
       dataIndex: 'orderItem',
       key: 'orderItem',
-      width: 80,
+      width: 60,
+      align: 'center' as const,
       render: (items: any[]) => items?.length || 0,
     },
     {
       title: t('common.description'),
       dataIndex: 'description',
       key: 'description',
+      width: 160,
       ellipsis: true,
-      render: (description: string) => description || '-',
+      onCell: () => ({ style: { whiteSpace: 'nowrap' } }),
+      responsive: ['xl'] as any,
+      render: (description: string) => (
+        description ? (
+          <Typography.Paragraph style={{ margin: 0 }} ellipsis={{ rows: 1, tooltip: description }}>
+            {description}
+          </Typography.Paragraph>
+        ) : '-'
+      ),
     },
     {
       title: t('order.priority'),
       dataIndex: 'priority',
       key: 'priority',
-      width: 100,
+      width: 90,
+      align: 'center' as const,
       render: (priority: string) => {
         const colors = {
           high: 'red',
@@ -214,7 +255,7 @@ const SimOrderList: React.FC = () => {
           low: 'blue',
         };
         return priority ? (
-          <Tag color={colors[priority as keyof typeof colors] || 'default'}>
+          <Tag color={colors[priority as keyof typeof colors] || 'default'} style={{ fontSize: 12, padding: '0 6px' }}>
             {priority}
           </Tag>
         ) : '-';
@@ -224,20 +265,23 @@ const SimOrderList: React.FC = () => {
       title: t('order.orderDate'),
       dataIndex: 'orderDate',
       key: 'orderDate',
-      width: 150,
+      width: 160,
+      align: 'center' as const,
       render: (date: string) => new Date(date).toLocaleString(),
     },
     {
       title: t('order.expectedCompletion'),
       dataIndex: 'expectedCompletionDate',
       key: 'expectedCompletionDate',
-      width: 150,
+      width: 160,
+      align: 'center' as const,
       render: (date: string) => date ? new Date(date).toLocaleString() : '-',
     },
     {
       title: t('common.actions'),
       key: 'actions',
-      width: 80,
+      width: 56,
+      fixed: 'right' as const,
       render: (_: any, record: SimOrder) => {
         const actions = getOrderActions(record);
         const items = actions.map(a => ({ key: a.key, label: a.label, icon: a.icon, danger: (a as any).danger }));
@@ -368,6 +412,8 @@ const SimOrderList: React.FC = () => {
           dataSource={orders}
           rowKey="id"
           loading={isLoading}
+          tableLayout="fixed"
+          size="small"
           pagination={{
             current: currentPage,
             pageSize,
@@ -382,7 +428,7 @@ const SimOrderList: React.FC = () => {
               setPageSize(size);
             },
           }}
-          scroll={{ x: 1000 }}
+          scroll={{ x: 1300 }}
         />
       </Card>
     </div>
