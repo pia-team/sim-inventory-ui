@@ -320,7 +320,11 @@
     "tagBgStrength": "Intensité de fond (%)",
     "tagBorderStrength": "Intensité de bordure (%)",
     "tagLightnessHint": "Ajustez l'intensité des variantes claires pour le fond/la bordure des étiquettes.",
-    "tagPalette": "Palette d'étiquettes"
+    "tagPalette": "Palette d'étiquettes",
+    "successColor": "Success Color",
+    "warningColor": "Warning Color",
+    "errorColor": "Error Color",
+    "infoColor": "Info Color"
   },
   "lang": {
     "en": "English",
