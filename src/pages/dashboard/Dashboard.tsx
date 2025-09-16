@@ -125,10 +125,13 @@ const Dashboard: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (_: any, record: any) => {
-        const s = String(record?.resourceStatus || record?.status || '').toLowerCase();
+        const raw = record?.resourceStatus || record?.status || '';
+        const s = String(raw).toLowerCase();
         const map: Record<string, string> = {
           available: 'green',
           reserved: 'gold',
+          inuse: 'blue',
+          disposed: 'default',
           standby: 'cyan',
           suspended: 'orange',
           alarm: 'red',
@@ -141,10 +144,10 @@ const Dashboard: React.FC = () => {
           retired: 'default',
         };
         const color = map[s] || 'default';
+        const key = s === 'inuse' ? 'inUse' : raw || '';
+        const label = key ? t(`sim.statusValues.${key}`, { defaultValue: String(raw || '-') }) : '-';
         return (
-          <Tag color={color}>
-            {s}
-          </Tag>
+          <Tag color={color}>{label}</Tag>
         );
       },
     },
@@ -322,6 +325,37 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
+      {/* Additional Status Cards */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={8}>
+          <Card>
+            <Statistic
+              title={t('dashboard.reserved', { defaultValue: 'Reserved' })}
+              value={stats?.reserved || 0}
+              valueStyle={{ color: 'var(--warning-color)' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+          <Card>
+            <Statistic
+              title={t('dashboard.inUse', { defaultValue: 'In use' })}
+              value={stats?.inUse || 0}
+              valueStyle={{ color: 'var(--info-color)' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+          <Card>
+            <Statistic
+              title={t('dashboard.disposed', { defaultValue: 'Disposed' })}
+              value={stats?.disposed || 0}
+              valueStyle={{ color: 'var(--text-color)' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       {/* Status Breakdown */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={12}>
@@ -353,6 +387,46 @@ const Dashboard: React.FC = () => {
                   />
                 </Col>
               ))}
+            </Row>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* State Distribution (RESOURCE_STATE) */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24}>
+          <Card title={t('dashboard.stateDistribution', { defaultValue: 'State Distribution' })}>
+            <Row gutter={[8, 8]}>
+              {Object.entries(stats?.byState || {}).map(([state, count]) => {
+                const s = String(state || '').toLowerCase();
+                const colorMap: Record<string, string> = {
+                  available: 'green',
+                  reserved: 'gold',
+                  standby: 'cyan',
+                  suspended: 'orange',
+                  alarm: 'red',
+                  completed: 'green',
+                  cancelled: 'default',
+                  unknown: 'default',
+                  active: 'cyan',
+                  terminated: 'red',
+                  retired: 'default',
+                };
+                const color = colorMap[s] || 'default';
+                const key = s === 'inuse' ? 'inUse' : s;
+                const label = t(`sim.statusValues.${key}`, { defaultValue: state });
+                return (
+                  <Col xs={24} sm={12} md={8} lg={6} key={state}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ width: 12, height: 12, borderRadius: 2, background: `var(--${color}-color, #ccc)`, marginRight: 8 }} />
+                        <span>{label}</span>
+                      </div>
+                      <strong>{String(count)}</strong>
+                    </div>
+                  </Col>
+                );
+              })}
             </Row>
           </Card>
         </Col>

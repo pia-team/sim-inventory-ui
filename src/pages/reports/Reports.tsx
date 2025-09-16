@@ -77,15 +77,18 @@ const Reports: React.FC = () => {
 
   const recentSims = recentSimsRaw.filter((sim: any) => inRange(sim.createdDate));
 
-  // Calculate status distribution percentages
+  // Calculate status distribution percentages (use canonical keys for i18n)
   const totalSims = stats?.total || 0;
   const statusDistribution = [
-    { status: 'Available', count: stats?.available || 0, color: 'var(--success-color)' },
-    { status: 'Allocated', count: stats?.allocated || 0, color: 'var(--primary-color)' },
-    { status: 'Active', count: stats?.active || 0, color: 'var(--info-color)' },
-    { status: 'Suspended', count: stats?.suspended || 0, color: 'var(--warning-color)' },
-    { status: 'Terminated', count: stats?.terminated || 0, color: 'var(--error-color)' },
-    { status: 'Retired', count: stats?.retired || 0, color: 'var(--text-color-secondary)' },
+    { key: 'available', count: stats?.available || 0, color: 'var(--success-color)' },
+    { key: 'reserved', count: stats?.reserved || 0, color: 'var(--warning-color)' },
+    { key: 'inUse', count: stats?.inUse || 0, color: 'var(--info-color)' },
+    { key: 'disposed', count: stats?.disposed || 0, color: 'var(--text-color)' },
+    { key: 'allocated', count: stats?.allocated || 0, color: 'var(--primary-color)' },
+    { key: 'active', count: stats?.active || 0, color: 'var(--info-color)' },
+    { key: 'suspended', count: stats?.suspended || 0, color: 'var(--warning-color)' },
+    { key: 'terminated', count: stats?.terminated || 0, color: 'var(--error-color)' },
+    { key: 'retired', count: stats?.retired || 0, color: 'var(--text-color-secondary)' },
   ];
 
   // Activity analysis by date
@@ -286,7 +289,7 @@ const Reports: React.FC = () => {
                         marginRight: 8,
                       }}
                     />
-                    <Text style={{ flex: 1 }}>{t(`sim.statusValues.${item.status.toLowerCase()}`)}</Text>
+                    <Text style={{ flex: 1 }}>{t(`sim.statusValues.${item.key}`)}</Text>
                     <Text strong>{item.count.toLocaleString()}</Text>
                   </div>
                   <Progress

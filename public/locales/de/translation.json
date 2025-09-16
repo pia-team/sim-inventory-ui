@@ -54,7 +54,16 @@
     "release": "Freigeben",
     "retire": "Stilllegen",
     "view": "Ansehen",
-    "update": "Aktualisieren"
+    "update": "Aktualisieren",
+    "setMarketplace": "Marktplatz setzen",
+    "reserve": "Auf Reserviert setzen",
+    "dispose": "Auf Entsorgt setzen",
+    "setDistributor": "Distributor setzen",
+    "clearDistributor": "Distributor löschen",
+    "setRepresentative": "Vertreter setzen",
+    "clearRepresentative": "Vertreter löschen",
+    "setCustomer": "Kunde setzen",
+    "clearCustomer": "Kunde löschen"
   },
   "sim": {
     "iccid": "ICCID",
@@ -67,6 +76,9 @@
     "batchId": "Batch-ID",
     "statusValues": {
       "available": "Verfügbar",
+      "reserved": "Reserviert",
+      "inUse": "In Benutzung",
+      "disposed": "Entsorgt",
       "allocated": "Zugewiesen",
       "active": "Aktiv",
       "suspended": "Suspendiert",
@@ -111,7 +123,9 @@
     "simNotFound": "SIM-Ressource nicht gefunden",
     "orderNotFound": "Auftrag nicht gefunden",
     "confirmCancelOrder": "Möchten Sie Auftrag {{id}} wirklich stornieren?",
-    "orderCancelled": "Auftrag erfolgreich storniert"
+    "orderCancelled": "Auftrag erfolgreich storniert",
+    "updated": "Aktualisiert",
+    "selectUnassignBehavior": "Wählen Sie den Status nach dem Aufheben der Zuordnung:"
   },
   "titles": {
     "simResourceDetails": "Details der SIM-Ressource",
@@ -142,6 +156,9 @@
     "default": "Standard",
     "primary": "Primär"
   },
+  "fields": {
+    "marketplace": "Marktplatz"
+  },
   "status": {
     "success": "Erfolg",
     "warning": "Warnung",
@@ -152,15 +169,17 @@
     "viewSimResources": "SIM-Ressourcen anzeigen",
     "startNewImport": "Neuen Import starten",
     "downloadSampleCsv": "Beispiel-CSV herunterladen",
-    "importAnotherBatch": "Weiteren Batch importieren",
-    "submitBulkJob": "Massenvorgang senden",
+    "importAnotherBatch": "Weiteren Import starten",
+    "submitBulkJob": "Bulk-Job senden",
     "exportCsv": "CSV exportieren",
     "addSim": "SIM hinzufügen",
-    "batchImport": "Stapelimport",
-    "createOrder": "Auftrag erstellen",
+    "batchImport": "Batch-Import",
+    "showAllocationControls": "Zuweisung anzeigen",
+    "hideAllocationControls": "Zuweisung ausblenden",
+    "createOrder": "Bestellung erstellen",
     "import": "Importieren",
-    "createSimilarOrder": "Ähnlichen Auftrag erstellen",
-    "viewAllOrders": "Alle Aufträge anzeigen"
+    "createSimilarOrder": "Ähnliche Bestellung erstellen",
+    "viewAllOrders": "Alle Bestellungen anzeigen"
   },
   "placeholders": {
     "searchByIccid": "Nach ICCID suchen",
@@ -174,6 +193,9 @@
     "createdFrom": "Erstellt ab",
     "createdTo": "Erstellt bis",
     "imsi": "IMSI",
+    "distributor": "Distributor",
+    "representative": "Vertreter",
+    "customer": "Kunde",
     "orderFrom": "Auftrag von",
     "orderTo": "Auftrag bis"
   },
@@ -256,6 +278,10 @@
     "available": "Verfügbar",
     "active": "Aktiv",
     "issues": "Probleme",
+    "reserved": "Reserviert",
+    "inUse": "In Benutzung",
+    "disposed": "Entsorgt",
+    "stateDistribution": "Zustandsverteilung",
     "statusDistribution": "Verteilung SIM-Status",
     "recentBatches": "Letzte Batches",
     "recentSimActivity": "Letzte SIM-Aktivität",

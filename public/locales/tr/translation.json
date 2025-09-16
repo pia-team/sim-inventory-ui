@@ -54,7 +54,16 @@
     "release": "Serbest Bırak",
     "retire": "Emekli Et",
     "view": "Görüntüle",
-    "update": "Güncelle"
+    "update": "Güncelle",
+    "setMarketplace": "Pazar Yerini Ayarla",
+    "reserve": "Rezerveye Ayarla",
+    "dispose": "İmhaya Ayarla",
+    "setDistributor": "Distribütör Ata",
+    "clearDistributor": "Distribütörü Temizle",
+    "setRepresentative": "Temsilci Ata",
+    "clearRepresentative": "Temsilciyi Temizle",
+    "setCustomer": "Müşteri Ata",
+    "clearCustomer": "Müşteriyi Temizle"
   },
   "sim": {
     "iccid": "ICCID",
@@ -67,6 +76,9 @@
     "batchId": "Batch ID",
     "statusValues": {
       "available": "Uygun",
+      "reserved": "Rezerve",
+      "inUse": "Kullanımda",
+      "disposed": "İmha",
       "allocated": "Tahsis Edildi",
       "active": "Aktif",
       "suspended": "Askıda",
@@ -111,7 +123,9 @@
     "simNotFound": "SIM Kaynağı Bulunamadı",
     "orderNotFound": "Sipariş Bulunamadı",
     "confirmCancelOrder": "{{id}} numaralı siparişi iptal etmek istediğinize emin misiniz?",
-    "orderCancelled": "Sipariş başarıyla iptal edildi"
+    "orderCancelled": "Sipariş başarıyla iptal edildi",
+    "updated": "Güncellendi",
+    "selectUnassignBehavior": "Atamayı kaldırdıktan sonra oluşacak durumu seçin:"
   },
   "titles": {
     "simResourceDetails": "SIM Kaynağı Detayları",
@@ -142,6 +156,9 @@
     "default": "Varsayılan",
     "primary": "Birincil"
   },
+  "fields": {
+    "marketplace": "Pazar Yeri"
+  },
   "status": {
     "success": "Başarılı",
     "warning": "Uyarı",
@@ -152,11 +169,13 @@
     "viewSimResources": "SIM Kaynaklarını Görüntüle",
     "startNewImport": "Yeni İçe Aktarma Başlat",
     "downloadSampleCsv": "Örnek CSV İndir",
-    "importAnotherBatch": "Başka Bir Partiyi İçe Aktar",
-    "submitBulkJob": "Toplu Görevi Gönder",
+    "importAnotherBatch": "Başka Bir İçe Aktarma",
+    "submitBulkJob": "Toplu İşi Gönder",
     "exportCsv": "CSV Dışa Aktar",
     "addSim": "SIM Ekle",
     "batchImport": "Toplu İçe Aktarma",
+    "showAllocationControls": "Tahsis alanlarını göster",
+    "hideAllocationControls": "Tahsis alanlarını gizle",
     "createOrder": "Sipariş Oluştur",
     "import": "İçe Aktar",
     "createSimilarOrder": "Benzer Sipariş Oluştur",
@@ -174,6 +193,9 @@
     "createdFrom": "Oluşturma Başlangıç",
     "createdTo": "Oluşturma Bitiş",
     "imsi": "IMSI",
+    "distributor": "Distribütör",
+    "representative": "Temsilci",
+    "customer": "Müşteri",
     "orderFrom": "Sipariş Başlangıç",
     "orderTo": "Sipariş Bitiş"
   },
@@ -256,6 +278,10 @@
     "available": "Uygun",
     "active": "Aktif",
     "issues": "Sorunlar",
+    "reserved": "Rezerve",
+    "inUse": "Kullanımda",
+    "disposed": "İmha",
+    "stateDistribution": "Durum Dağılımı",
     "statusDistribution": "SIM Durum Dağılımı",
     "recentBatches": "Son Partiler",
     "recentSimActivity": "Son SIM Aktivitesi",

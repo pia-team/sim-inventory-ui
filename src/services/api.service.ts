@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+  import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { 
   SimResource, 
   SimOrder, 
@@ -13,14 +13,20 @@ import {
   BulkResourceCreateRequest,
 } from '../types/sim.types';
 
+// Base URLs are configurable via environment variables (CRA). Fallbacks preserve current defaults.
+const RIM_BASE_URL = process.env.REACT_APP_RIM_BASE_URL || 'https://dri-api.dnext-pia.com/api/resourceInventoryManagement/v4';
+const ROM_BASE_URL = process.env.REACT_APP_ROM_BASE_URL || 'https://dro-api.dnext-pia.com/api/resourceOrderingManagement/v4';
+const PM_BASE_URL  = process.env.REACT_APP_PM_BASE_URL  || 'https://dri-api.dnext-pia.com/api/partyManagement/v4';
+
 class ApiService {
   private api: AxiosInstance;
   private orderApi: AxiosInstance;
+  private partyApi: AxiosInstance;
   private keycloakToken: string | null = null;
 
   constructor() {
     this.api = axios.create({
-      baseURL: 'https://dri-api.dnext-pia.com/api/resourceInventoryManagement/v4',
+      baseURL: RIM_BASE_URL,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -29,7 +35,17 @@ class ApiService {
     });
 
     this.orderApi = axios.create({
-      baseURL: 'https://dro-api.dnext-pia.com/api/resourceOrderingManagement/v4',
+      baseURL: ROM_BASE_URL,
+      timeout: 30000,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+
+    // Party Management (TMF632) - assumed base on same host. Adjust if your env differs.
+    this.partyApi = axios.create({
+      baseURL: PM_BASE_URL,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -39,6 +55,160 @@ class ApiService {
 
     this.setupInterceptors(this.api);
     this.setupInterceptors(this.orderApi);
+    this.setupInterceptors(this.partyApi);
+  }
+
+  // Public wrapper for clearing allocation role
+  public async clearAllocationByRole(id: string, role: 'Distributor' | 'Representative' | 'Customer'): Promise<ApiResponse<SimResource>> {
+    return this.removeRelatedPartyByRole(id, role);
+  }
+
+  // Public wrapper for relatedParty upsert (accepts id or name; will lookup id by name if missing)
+  public async setAllocationRelatedParty(id: string, role: 'Distributor' | 'Representative' | 'Customer', party: { id?: string; name?: string; '@referredType'?: string }): Promise<ApiResponse<SimResource>> {
+    let payload = { ...party } as { id?: string; name?: string; '@referredType'?: string };
+    if (!payload.id && payload.name) {
+      const found = await this.findPartyByName(payload.name);
+      if (found) {
+        payload.id = found.id;
+        // prefer explicit provided name; else use found.name
+        payload.name = payload.name || found.name;
+        payload['@referredType'] = payload['@referredType'] || found['@referredType'] || 'Party';
+      } else {
+        return {
+          success: false,
+          error: {
+            code: 'PARTY_NOT_FOUND',
+            message: `Party not found by name: ${payload.name}`,
+            timestamp: new Date().toISOString(),
+            path: '/partyManagement/v4/party',
+          },
+          timestamp: new Date().toISOString(),
+        };
+      }
+    }
+    // Default referred type if still missing
+    payload['@referredType'] = payload['@referredType'] || 'Party';
+    // Read current status to decide if we should set Reserved on Customer allocation
+    let currentStatus: string | undefined;
+    try {
+      const read = await this.api.get<SimResource>(`/resource/${id}`);
+      currentStatus = (read.data as any)?.resourceStatus || (read.data as any)?.status;
+    } catch {
+      currentStatus = undefined;
+    }
+
+    const res = await this.upsertRelatedParty(id, role, payload);
+    if (!res.success) return res;
+    // If Customer allocated manually and not already in use, set status to Reserved
+    if (role === 'Customer' && String(currentStatus || '').toLowerCase() !== 'inuse') {
+      return this.setResourceStatus(id, 'reserved');
+    }
+    return res;
+  }
+
+  // Helper: remove a characteristic by name while preserving others
+  private async removeResourceCharacteristic(id: string, name: string, extraPatch?: Record<string, any>): Promise<ApiResponse<SimResource>> {
+    let existing: SimResource | undefined;
+    try {
+      const read = await this.api.get<SimResource>(`/resource/${id}`);
+      existing = read.data;
+    } catch (e) {
+      existing = undefined;
+    }
+
+    const current = Array.isArray(existing?.resourceCharacteristic)
+      ? [...(existing!.resourceCharacteristic as any[])]
+      : [];
+
+    const next = current.filter((c: any) => String(c?.name || '').toLowerCase() !== String(name).toLowerCase());
+    const body: any = { resourceCharacteristic: next, ...(extraPatch || {}) };
+    return this.handleResponse(
+      this.api.patch<SimResource>(`/resource/${id}`, body, {
+        headers: { 'Content-Type': 'application/merge-patch+json;charset=utf-8' },
+      })
+    );
+  }
+
+  // Helper: set resourceStatus field
+  private async setResourceStatus(id: string, status: string): Promise<ApiResponse<SimResource>> {
+    return this.handleResponse(
+      this.api.patch<SimResource>(`/resource/${id}`, { resourceStatus: status }, {
+        headers: { 'Content-Type': 'application/merge-patch+json;charset=utf-8' },
+      })
+    );
+  }
+
+  // Public wrapper for setting resourceStatus
+  public async updateResourceStatus(id: string, status: string): Promise<ApiResponse<SimResource>> {
+    return this.setResourceStatus(id, status);
+  }
+
+  // Helper: upsert a relatedParty by role (by name or id)
+  private async upsertRelatedParty(id: string, role: string, party: { id?: string; name?: string; '@referredType'?: string }): Promise<ApiResponse<SimResource>> {
+    let existing: SimResource | undefined;
+    try {
+      const read = await this.api.get<SimResource>(`/resource/${id}`);
+      existing = read.data;
+    } catch (e) {
+      existing = undefined;
+    }
+
+    const current = Array.isArray((existing as any)?.relatedParty) ? [ ...(existing as any).relatedParty as any[] ] : [];
+    const idx = current.findIndex((p: any) => String(p?.role || '').toLowerCase() === role.toLowerCase());
+    const next = { ...(idx >= 0 ? current[idx] : {}), role, ...(party.id ? { id: party.id } : {}), ...(party.name ? { name: party.name } : {}), '@referredType': (idx >= 0 ? current[idx]['@referredType'] : (party['@referredType'] || 'Party')) };
+    if (idx >= 0) current[idx] = next; else current.push(next);
+    const body: any = { relatedParty: current };
+    return this.handleResponse(
+      this.api.patch<SimResource>(`/resource/${id}`, body, {
+        headers: { 'Content-Type': 'application/merge-patch+json;charset=utf-8' },
+      })
+    );
+  }
+
+  private async removeRelatedPartyByRole(id: string, role: string): Promise<ApiResponse<SimResource>> {
+    let existing: SimResource | undefined;
+    try {
+      const read = await this.api.get<SimResource>(`/resource/${id}`);
+      existing = read.data;
+    } catch (e) {
+      existing = undefined;
+    }
+
+    const current = Array.isArray((existing as any)?.relatedParty) ? [ ...(existing as any).relatedParty as any[] ] : [];
+    const next = current.filter((p: any) => String(p?.role || '').toLowerCase() !== role.toLowerCase());
+    const body: any = { relatedParty: next };
+    return this.handleResponse(
+      this.api.patch<SimResource>(`/resource/${id}`, body, {
+        headers: { 'Content-Type': 'application/merge-patch+json;charset=utf-8' },
+      })
+    );
+  }
+
+  // Business helpers
+  async assignSimToAccount(id: string, msisdn: string): Promise<ApiResponse<SimResource>> {
+    // Upsert MSISDN characteristic and set status to 'in use'; also upsert relatedParty as Customer
+    const res1 = await this.upsertResourceCharacteristic(id, 'MSISDN', msisdn);
+    if (!res1.success) return res1 as any;
+    const res2 = await this.setResourceStatus(id, 'inUse');
+    if (!res2.success) return res2 as any;
+    // Backend requires id and @referredType; default to Party when assigning by MSISDN/Account reference
+    const res3 = await this.upsertRelatedParty(id, 'Customer', { id: msisdn, name: msisdn, '@referredType': 'Party' });
+    return res3;
+  }
+
+  async unassignSimResource(id: string, behavior: 'reserved' | 'disposed'): Promise<ApiResponse<SimResource>> {
+    // Remove MSISDN and Customer relatedParty; set status based on behavior
+    const res1 = await this.removeResourceCharacteristic(id, 'MSISDN');
+    if (!res1.success) return res1 as any;
+    const res2 = await this.removeRelatedPartyByRole(id, 'Customer');
+    if (!res2.success) return res2 as any;
+    const res3 = await this.setResourceStatus(id, behavior);
+    return res3;
+  }
+
+  // Public wrapper to upsert a single characteristic
+  public async upsertCharacteristic(id: string, name: string, value: any, extraPatch?: Record<string, any>): Promise<ApiResponse<SimResource>> {
+    return this.upsertResourceCharacteristic(id, name, value, extraPatch);
   }
 
   private setupInterceptors(instance: AxiosInstance): void {
@@ -108,6 +278,27 @@ class ApiService {
     }
   }
 
+  // Party lookup by name (TMF632 Party)
+  private async findPartyByName(name: string): Promise<{ id: string; name?: string; '@referredType'?: string } | null> {
+    try {
+      const resp = await this.partyApi.get<any>('/party', { params: { name, limit: 1 } });
+      const data = resp.data;
+      const arr: any[] = Array.isArray(data) ? data : (data?.data || []);
+      if (arr && arr.length > 0) {
+        const p = arr[0] || {};
+        const id = p.id || p.partyId || p.identifier || p.uuid;
+        const displayName = p.name || p.tradingName || p.fullName || name;
+        const refType = p['@type'] || p['@referredType'] || 'Party';
+        if (id) {
+          return { id, name: displayName, '@referredType': refType };
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  }
+
   // SIM Resource APIs
   async getSimResources(searchCriteria?: SimResourceSearchCriteria): Promise<ApiResponse<PaginatedResponse<SimResource>>> {
     const params = new URLSearchParams();
@@ -115,6 +306,8 @@ class ApiService {
     if (searchCriteria) {
       Object.entries(searchCriteria).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
+          // characteristicFilters are handled separately below
+          if (key === 'characteristicFilters') return;
           if (Array.isArray(value)) {
             value.forEach(v => params.append(key, v.toString()));
           } else {
@@ -143,14 +336,20 @@ class ApiService {
         params.delete('resourceStatus');
       }
 
-      const normalized = collected
+      const canonical = collected
         .flatMap(v => String(v).split(','))
         .map(v => v.trim())
         .filter(Boolean)
-        .map(v => v.toLowerCase());
+        .map(v => {
+          const lower = v.toLowerCase();
+          // Keep canonical camelCase for 'inUse'
+          if (lower === 'inuse') return 'inUse';
+          // Other statuses are canonical in lowercase per backend
+          return lower;
+        });
 
-      if (normalized.length) {
-        const unique = Array.from(new Set(normalized));
+      if (canonical.length) {
+        const unique = Array.from(new Set(canonical));
         params.set('resourceStatus', unique.join(','));
       }
     }
@@ -185,6 +384,33 @@ class ApiService {
         vals.forEach(v => params.append('resourceCharacteristic.value', v));
       }
     }
+
+    // Map generic custom characteristic filters (array of {name,value}) to repeated params
+    if (searchCriteria && Array.isArray((searchCriteria as any).characteristicFilters)) {
+      const list = (searchCriteria as any).characteristicFilters as Array<{ name: string; value: string }>;
+      list.forEach(({ name, value }) => {
+        if (!name || value === undefined || value === null) return;
+        params.append('resourceCharacteristic.name', name);
+        params.append('resourceCharacteristic.value', String(value));
+      });
+    }
+
+    // Allocation filters via relatedParty
+    const mapAlloc = (
+      key: 'allocationDistributor' | 'allocationRepresentative' | 'allocationCustomer',
+      role: string
+    ) => {
+      if (params.has(key)) {
+        const vals = params.getAll(key);
+        params.delete(key);
+        params.append('relatedParty.role', role);
+        // send names; if ids are supplied they will be treated as names by backend unless it supports id field
+        vals.forEach((v) => params.append('relatedParty.name', v));
+      }
+    };
+    mapAlloc('allocationDistributor', 'Distributor');
+    mapAlloc('allocationRepresentative', 'Representative');
+    mapAlloc('allocationCustomer', 'Customer');
 
     return this.handleResponse(
       this.api.get<PaginatedResponse<SimResource>>('/resource', { params })
@@ -412,6 +638,9 @@ class ApiService {
   async getSimStatistics(): Promise<ApiResponse<{
     total: number;
     available: number;
+    reserved: number;
+    inUse: number;
+    disposed: number;
     allocated: number;
     active: number;
     suspended: number;
@@ -419,6 +648,7 @@ class ApiService {
     retired: number;
     byType: Record<string, number>;
     byBatch: Record<string, number>;
+    byState: Record<string, number>;
   }>> {
     // The backend may not expose /resource/statistics. Compute on the client by paging /resource.
     try {
@@ -441,6 +671,9 @@ class ApiService {
   private async computeSimStatistics(): Promise<ApiResponse<{
     total: number;
     available: number;
+    reserved: number;
+    inUse: number;
+    disposed: number;
     allocated: number;
     active: number;
     suspended: number;
@@ -448,6 +681,7 @@ class ApiService {
     retired: number;
     byType: Record<string, number>;
     byBatch: Record<string, number>;
+    byState: Record<string, number>;
   }>> {
     const limit = 200;
     let offset = 0;
@@ -485,6 +719,9 @@ class ApiService {
     const counts = {
       total: reportedTotal ?? items.length,
       available: 0,
+      reserved: 0,
+      inUse: 0,
+      disposed: 0,
       allocated: 0,
       active: 0,
       suspended: 0,
@@ -493,14 +730,18 @@ class ApiService {
     };
     const byType: Record<string, number> = {};
     const byBatch: Record<string, number> = {};
+    const byState: Record<string, number> = {};
 
     const getChar = (sim: any, key: string) =>
       sim?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
 
     for (const sim of items) {
-      const status: string | undefined = sim?.status || sim?.resourceStatus;
+      const status: string | undefined = sim?.resourceStatus || sim?.status;
       switch ((status || '').toLowerCase()) {
         case 'available': counts.available++; break;
+        case 'reserved': counts.reserved++; break;
+        case 'inuse': counts.inUse++; break;
+        case 'disposed': counts.disposed++; break;
         case 'allocated': counts.allocated++; break;
         case 'active': counts.active++; break;
         case 'suspended': counts.suspended++; break;
@@ -514,6 +755,9 @@ class ApiService {
 
       const batch = sim?.batchId ?? getChar(sim, 'BatchId') ?? 'No Batch';
       byBatch[String(batch)] = (byBatch[String(batch)] || 0) + 1;
+
+      const state = String(getChar(sim, 'RESOURCE_STATE') || '').trim();
+      if (state) byState[state] = (byState[state] || 0) + 1;
     }
 
     return {
@@ -521,6 +765,9 @@ class ApiService {
       data: {
         total: counts.total,
         available: counts.available,
+        reserved: counts.reserved,
+        inUse: counts.inUse,
+        disposed: counts.disposed,
         allocated: counts.allocated,
         active: counts.active,
         suspended: counts.suspended,
@@ -528,6 +775,7 @@ class ApiService {
         retired: counts.retired,
         byType,
         byBatch,
+        byState,
       },
       timestamp: new Date().toISOString(),
     };

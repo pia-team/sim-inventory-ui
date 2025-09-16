@@ -14,6 +14,8 @@ import {
   Col,
   DatePicker,
   Typography,
+  Popover,
+  Tooltip,
 } from 'antd';
 import type { MenuProps } from 'antd';
 import {
@@ -30,6 +32,7 @@ import {
   UnlockOutlined,
   RestOutlined,
   EyeOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
@@ -62,6 +65,11 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
   const [pageSize, setPageSize] = useState(20);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [charFilters, setCharFilters] = useState<{ name: string; value: string }[]>([]);
+  const [marketplaceValue, setMarketplaceValue] = useState<string>('');
+  const [allocDistributorId, setAllocDistributorId] = useState<string>('');
+  const [allocRepresentativeId, setAllocRepresentativeId] = useState<string>('');
+  const [allocCustomerId, setAllocCustomerId] = useState<string>('');
 
   // Fetch SIM resources
   const { data: response, isLoading, refetch } = useQuery(
@@ -184,6 +192,13 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     setCurrentPage(1);
   };
 
+  const applyCharFilters = (rows: { name: string; value: string }[]) => {
+    setCharFilters(rows);
+    const sanitized = rows.filter(r => r.name && r.value).map(r => ({ name: r.name, value: r.value }));
+    setSearchCriteria((prev) => ({ ...prev, characteristicFilters: sanitized.length ? sanitized : undefined }));
+    setCurrentPage(1);
+  };
+
   const handleLifecycleAction = (action: LifecycleAction, sim: SimResource) => {
     const actionMap = {
       [LifecycleAction.ACTIVATE]: () => activateMutation.mutate(sim.id),
@@ -236,6 +251,8 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       // New ResourceStatus values
       case 'available': return 'green';
       case 'reserved': return 'gold';
+      case 'inuse': return 'blue';
+      case 'disposed': return 'default';
       case 'standby': return 'cyan';
       case 'suspended': return 'orange';
       case 'alarm': return 'red';
@@ -251,6 +268,14 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     }
   };
 
+  const formatStatusLabel = (val?: string) => {
+    const s = String(val || '').toLowerCase();
+    if (s === 'inuse') return 'In use';
+    if (s === 'disposed') return 'Disposed';
+    if (!val) return '-';
+    return String(val);
+  };
+
   const getAvailableActions = (sim: SimResource) => {
     const actions: any[] = [];
     const stateChar = String(getChar(sim, 'RESOURCE_STATE') || '').toLowerCase();
@@ -264,29 +289,30 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       case 'unknown':
         actions.push({
           key: 'activate',
-          label: 'Activate',
+          label: t('actions.activate'),
           icon: <PlayCircleOutlined />,
           onClick: () => handleLifecycleAction(LifecycleAction.ACTIVATE, sim),
         });
         actions.push({
           key: 'retire',
-          label: 'Retire',
+          label: t('actions.retire'),
           icon: <RestOutlined />,
           danger: true,
           onClick: () => handleLifecycleAction(LifecycleAction.RETIRE, sim),
         });
         break;
-      case 'active':
       case 'reserved':
+      case 'inuse':
+      case 'active':
         actions.push({
           key: 'suspend',
-          label: 'Suspend',
+          label: t('actions.suspend'),
           icon: <PauseCircleOutlined />,
           onClick: () => handleLifecycleAction(LifecycleAction.SUSPEND, sim),
         });
         actions.push({
           key: 'terminate',
-          label: 'Terminate',
+          label: t('actions.terminate'),
           icon: <StopOutlined />,
           onClick: () => handleLifecycleAction(LifecycleAction.TERMINATE, sim),
         });
@@ -294,19 +320,19 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       case 'suspended':
         actions.push({
           key: 'activate',
-          label: 'Reactivate',
+          label: t('actions.activate'),
           icon: <PlayCircleOutlined />,
           onClick: () => handleLifecycleAction(LifecycleAction.ACTIVATE, sim),
         });
         actions.push({
           key: 'terminate',
-          label: 'Terminate',
+          label: t('actions.terminate'),
           icon: <StopOutlined />,
           onClick: () => handleLifecycleAction(LifecycleAction.TERMINATE, sim),
         });
         actions.push({
           key: 'retire',
-          label: 'Retire',
+          label: t('actions.retire'),
           icon: <RestOutlined />,
           danger: true,
           onClick: () => handleLifecycleAction(LifecycleAction.RETIRE, sim),
@@ -316,13 +342,13 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       case 'terminated':
         actions.push({
           key: 'release',
-          label: 'Release',
+          label: t('actions.release'),
           icon: <UnlockOutlined />,
           onClick: () => handleLifecycleAction(LifecycleAction.RELEASE, sim),
         });
         actions.push({
           key: 'retire',
-          label: 'Retire',
+          label: t('actions.retire'),
           icon: <RestOutlined />,
           danger: true,
           onClick: () => handleLifecycleAction(LifecycleAction.RETIRE, sim),
@@ -333,10 +359,10 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
         break;
     }
 
-    if (status === 'available' && hasRole('sim_admin')) {
+    if ((status === 'available' || status === 'disposed') && hasRole('sim_admin')) {
       actions.push({
         key: 'delete',
-        label: 'Delete',
+        label: t('actions.delete'),
         icon: <DeleteOutlined />,
         danger: true,
         onClick: () => handleDelete(sim),
@@ -399,9 +425,10 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       width: 120,
       render: (_: any, record: any) => {
         const s = record?.resourceStatus || record?.status;
+        const key = String(s || '').toLowerCase() === 'inuse' ? 'inUse' : String(s || '');
         return (
           <Tag color={getStatusColor(s as any)}>
-            {s || '-'}
+            {t(`sim.statusValues.${key}`, { defaultValue: formatStatusLabel(s as string) })}
           </Tag>
         );
       },
@@ -587,7 +614,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                 >
                   {RESOURCE_STATUS_VALUES.map(status => (
                     <Option key={status} value={status}>
-                      <Tag color={getStatusColor(status)}>{status}</Tag>
+                      <Tag color={getStatusColor(status)}>{formatStatusLabel(status)}</Tag>
                     </Option>
                   ))}
                 </Select>
@@ -635,10 +662,175 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                   allowClear
                 />
               </Col>
+
+              {/* Allocation filters */}
+              <Col xs={24} sm={12} md={6}>
+                <Input placeholder={t('filters.distributor', { defaultValue: 'Distributor' })}
+                  onChange={(e) => handleFilterChange('allocationDistributor' as any, e.target.value || undefined)} allowClear />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Input placeholder={t('filters.representative', { defaultValue: 'Representative' })}
+                  onChange={(e) => handleFilterChange('allocationRepresentative' as any, e.target.value || undefined)} allowClear />
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Input placeholder={t('filters.customer', { defaultValue: 'Customer' })}
+                  onChange={(e) => handleFilterChange('allocationCustomer' as any, e.target.value || undefined)} allowClear />
+              </Col>
+
+              {/* Custom characteristic filter builder */}
+              <Col xs={24}>
+                <Card size="small" title={t('filters.customCharacteristics', { defaultValue: 'Custom Field Filters' })}>
+                  {charFilters.map((row, idx) => (
+                    <Row key={idx} gutter={8} style={{ marginBottom: 8 }} align="middle">
+                      <Col xs={24} sm={8}>
+                        <Input placeholder="Name (e.g., Marketplace)" value={row.name}
+                          onChange={(e) => {
+                            const next = [...charFilters];
+                            next[idx] = { ...next[idx], name: e.target.value };
+                            applyCharFilters(next);
+                          }} />
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Input placeholder="Value" value={row.value}
+                          onChange={(e) => {
+                            const next = [...charFilters];
+                            next[idx] = { ...next[idx], value: e.target.value };
+                            applyCharFilters(next);
+                          }} />
+                      </Col>
+                      <Col xs={24} sm={4}>
+                        <Button danger onClick={() => {
+                          const next = charFilters.filter((_, i) => i !== idx);
+                          applyCharFilters(next);
+                        }}>{t('common.remove', { defaultValue: 'Remove' })}</Button>
+                      </Col>
+                    </Row>
+                  ))}
+                  <Button onClick={() => applyCharFilters([...charFilters, { name: '', value: '' }])}>{t('common.add', { defaultValue: 'Add filter' })}</Button>
+                </Card>
+              </Col>
             </Row>
           </Card>
         )}
         </div>
+
+        {/* Bulk operations toolbar */}
+        {hasRole('sim_admin') && selectedRowKeys.length > 0 && (
+          <Card size="small" style={{ marginBottom: 12 }}>
+            <Space wrap size={8}>
+              <Tag color="blue">{selectedRowKeys.length} selected</Tag>
+              <Button size="small" onClick={async () => {
+                for (const id of selectedRowKeys) {
+                  await apiService.updateResourceStatus(String(id), 'reserved');
+                }
+                message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                setSelectedRowKeys([]);
+                refetch();
+              }}>{t('actions.reserve', { defaultValue: 'Set Reserved' })}</Button>
+              <Button size="small" danger onClick={async () => {
+                for (const id of selectedRowKeys) {
+                  await apiService.updateResourceStatus(String(id), 'disposed');
+                }
+                message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                setSelectedRowKeys([]);
+                refetch();
+              }}>{t('actions.dispose', { defaultValue: 'Set Disposed' })}</Button>
+              <Space.Compact>
+                <Input size="small" placeholder={t('fields.marketplace', { defaultValue: 'Marketplace' })} value={marketplaceValue} onChange={(e) => setMarketplaceValue(e.target.value)} style={{ width: 220 }} />
+                <Button size="small" type="primary" disabled={!marketplaceValue} onClick={async () => {
+                  for (const id of selectedRowKeys) {
+                    await apiService.upsertCharacteristic(String(id), 'Marketplace', marketplaceValue);
+                  }
+                  message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                  setSelectedRowKeys([]);
+                  setMarketplaceValue('');
+                  refetch();
+                }}>{t('actions.setMarketplace', { defaultValue: 'Set Marketplace' })}</Button>
+              </Space.Compact>
+
+              <Tooltip title={t('buttons.showAllocationControls', { defaultValue: 'Allocation' })}>
+                <Popover
+                  placement="bottomLeft"
+                  trigger="click"
+                  content={(
+                    <Space direction="vertical" size={8}>
+                      {/* Distributor */}
+                      <Space.Compact>
+                        <Input size="small" placeholder={t('filters.distributor', { defaultValue: 'Distributor ID' })}
+                          value={allocDistributorId} onChange={(e) => setAllocDistributorId(e.target.value)} style={{ width: 220 }} />
+                        <Button size="small" disabled={!allocDistributorId} onClick={async () => {
+                          for (const id of selectedRowKeys) {
+                            await apiService.setAllocationRelatedParty(String(id), 'Distributor', { id: allocDistributorId, '@referredType': 'Party' });
+                          }
+                          message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                          setAllocDistributorId('');
+                          setSelectedRowKeys([]);
+                          refetch();
+                        }}>{t('actions.setDistributor', { defaultValue: 'Set Distributor' })}</Button>
+                        <Button size="small" danger onClick={async () => {
+                          for (const id of selectedRowKeys) {
+                            await apiService.clearAllocationByRole(String(id), 'Distributor');
+                          }
+                          message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                          setSelectedRowKeys([]);
+                          refetch();
+                        }}>{t('actions.clearDistributor', { defaultValue: 'Clear Distributor' })}</Button>
+                      </Space.Compact>
+
+                      {/* Representative */}
+                      <Space.Compact>
+                        <Input size="small" placeholder={t('filters.representative', { defaultValue: 'Representative ID' })}
+                          value={allocRepresentativeId} onChange={(e) => setAllocRepresentativeId(e.target.value)} style={{ width: 240 }} />
+                        <Button size="small" disabled={!allocRepresentativeId} onClick={async () => {
+                          for (const id of selectedRowKeys) {
+                            await apiService.setAllocationRelatedParty(String(id), 'Representative', { id: allocRepresentativeId, '@referredType': 'Party' });
+                          }
+                          message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                          setAllocRepresentativeId('');
+                          setSelectedRowKeys([]);
+                          refetch();
+                        }}>{t('actions.setRepresentative', { defaultValue: 'Set Representative' })}</Button>
+                        <Button size="small" danger onClick={async () => {
+                          for (const id of selectedRowKeys) {
+                            await apiService.clearAllocationByRole(String(id), 'Representative');
+                          }
+                          message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                          setSelectedRowKeys([]);
+                          refetch();
+                        }}>{t('actions.clearRepresentative', { defaultValue: 'Clear Representative' })}</Button>
+                      </Space.Compact>
+
+                      {/* Customer */}
+                      <Space.Compact>
+                        <Input size="small" placeholder={t('filters.customer', { defaultValue: 'Customer ID' })}
+                          value={allocCustomerId} onChange={(e) => setAllocCustomerId(e.target.value)} style={{ width: 220 }} />
+                        <Button size="small" disabled={!allocCustomerId} onClick={async () => {
+                          for (const id of selectedRowKeys) {
+                            await apiService.setAllocationRelatedParty(String(id), 'Customer', { id: allocCustomerId, '@referredType': 'Party' });
+                          }
+                          message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                          setAllocCustomerId('');
+                          setSelectedRowKeys([]);
+                          refetch();
+                        }}>{t('actions.setCustomer', { defaultValue: 'Set Customer' })}</Button>
+                        <Button size="small" danger onClick={async () => {
+                          for (const id of selectedRowKeys) {
+                            await apiService.clearAllocationByRole(String(id), 'Customer');
+                          }
+                          message.success(t('messages.updated', { defaultValue: 'Updated' }));
+                          setSelectedRowKeys([]);
+                          refetch();
+                        }}>{t('actions.clearCustomer', { defaultValue: 'Clear Customer' })}</Button>
+                      </Space.Compact>
+                    </Space>
+                  )}
+                >
+                  <Button size="small" icon={<TeamOutlined />} />
+                </Popover>
+              </Tooltip>
+            </Space>
+          </Card>
+        )}
 
         <Card>
         <Table

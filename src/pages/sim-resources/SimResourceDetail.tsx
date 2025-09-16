@@ -17,6 +17,8 @@ import {
   Col,
   Timeline,
   Dropdown,
+  Radio,
+  Tabs,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -31,10 +33,17 @@ import {
   RestOutlined,
   MinusCircleOutlined,
   PlusOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  CopyOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import apiService from '../../services/api.service';
-import { SimStatus, LifecycleAction, RESOURCE_STATUS_VALUES } from '../../types/sim.types';
+import {
+  SimStatus,
+  LifecycleAction,
+  RESOURCE_STATUS_VALUES,
+} from '../../types/sim.types';
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
@@ -52,7 +61,33 @@ const SimResourceDetail: React.FC = () => {
 
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<LifecycleAction | null>(null);
+  const [selectedAction, setSelectedAction] = useState<LifecycleAction | null>(
+    null
+  );
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [assignMsisdn, setAssignMsisdn] = useState('');
+  const [unassignModalVisible, setUnassignModalVisible] = useState(false);
+  const [unassignBehavior, setUnassignBehavior] = useState<'reserved' | 'disposed'>('disposed');
+  const [showPIN, setShowPIN] = useState(false);
+  const [showPUK1, setShowPUK1] = useState(false);
+  const [showPUK2, setShowPUK2] = useState(false);
+  const [showEAct, setShowEAct] = useState(false);
+  // Allocation editor state (TMF relatedParty requires id and @referredType)
+  const [distId, setDistId] = useState('');
+  const [distName, setDistName] = useState('');
+  const [distType, setDistType] = useState<
+    'Party' | 'Organization' | 'Individual'
+  >('Party');
+  const [repId, setRepId] = useState('');
+  const [repName, setRepName] = useState('');
+  const [repType, setRepType] = useState<
+    'Party' | 'Organization' | 'Individual'
+  >('Party');
+  const [custId, setCustId] = useState('');
+  const [custName, setCustName] = useState('');
+  const [custType, setCustType] = useState<
+    'Party' | 'Organization' | 'Individual'
+  >('Party');
 
   // Fetch SIM resource details
   const { data: response, isLoading } = useQuery(
@@ -60,6 +95,41 @@ const SimResourceDetail: React.FC = () => {
     () => apiService.getSimResourceById(id!),
     {
       enabled: !!id,
+    }
+  );
+
+  const assignMutation = useMutation(
+    () => apiService.assignSimToAccount(id!, assignMsisdn),
+    {
+      onSuccess: () => {
+        message.success('SIM assigned to account');
+        queryClient.invalidateQueries(['simResource', id]);
+        setAssignModalVisible(false);
+        setAssignMsisdn('');
+      },
+      onError: (error: any) => {
+        message.error(
+          error?.response?.data?.message || error.message || 'Failed to assign'
+        );
+      },
+    }
+  );
+
+  const unassignMutation = useMutation(
+    () => apiService.unassignSimResource(id!, unassignBehavior),
+    {
+      onSuccess: () => {
+        message.success(`SIM unassigned (${unassignBehavior})`);
+        queryClient.invalidateQueries(['simResource', id]);
+        setUnassignModalVisible(false);
+      },
+      onError: (error: any) => {
+        message.error(
+          error?.response?.data?.message ||
+            error.message ||
+            'Failed to unassign'
+        );
+      },
     }
   );
 
@@ -73,7 +143,9 @@ const SimResourceDetail: React.FC = () => {
         setEditModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(`Failed to update SIM: ${error.response?.data?.message || error.message}`);
+        message.error(
+          `Failed to update SIM: ${error.response?.data?.message || error.message}`
+        );
       },
     }
   );
@@ -89,7 +161,9 @@ const SimResourceDetail: React.FC = () => {
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(`Failed to activate SIM: ${error.response?.data?.message || error.message}`);
+        message.error(
+          `Failed to activate SIM: ${error.response?.data?.message || error.message}`
+        );
       },
     }
   );
@@ -104,7 +178,9 @@ const SimResourceDetail: React.FC = () => {
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(`Failed to suspend SIM: ${error.response?.data?.message || error.message}`);
+        message.error(
+          `Failed to suspend SIM: ${error.response?.data?.message || error.message}`
+        );
       },
     }
   );
@@ -119,7 +195,9 @@ const SimResourceDetail: React.FC = () => {
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(`Failed to terminate SIM: ${error.response?.data?.message || error.message}`);
+        message.error(
+          `Failed to terminate SIM: ${error.response?.data?.message || error.message}`
+        );
       },
     }
   );
@@ -134,7 +212,9 @@ const SimResourceDetail: React.FC = () => {
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(`Failed to release SIM: ${error.response?.data?.message || error.message}`);
+        message.error(
+          `Failed to release SIM: ${error.response?.data?.message || error.message}`
+        );
       },
     }
   );
@@ -149,23 +229,24 @@ const SimResourceDetail: React.FC = () => {
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(`Failed to retire SIM: ${error.response?.data?.message || error.message}`);
+        message.error(
+          `Failed to retire SIM: ${error.response?.data?.message || error.message}`
+        );
       },
     }
   );
 
-  const deleteMutation = useMutation(
-    () => apiService.deleteSimResource(id!),
-    {
-      onSuccess: () => {
-        message.success('SIM deleted successfully');
-        navigate('/sim-resources');
-      },
-      onError: (error: any) => {
-        message.error(`Failed to delete SIM: ${error.response?.data?.message || error.message}`);
-      },
-    }
-  );
+  const deleteMutation = useMutation(() => apiService.deleteSimResource(id!), {
+    onSuccess: () => {
+      message.success('SIM deleted successfully');
+      navigate('/sim-resources');
+    },
+    onError: (error: any) => {
+      message.error(
+        `Failed to delete SIM: ${error.response?.data?.message || error.message}`
+      );
+    },
+  });
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -188,7 +269,9 @@ const SimResourceDetail: React.FC = () => {
 
   // Helper to read a characteristic by name (e.g., ICCID, IMSI, BatchId)
   const getChar = (obj: any, key: string) =>
-    obj?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
+    obj?.resourceCharacteristic?.find(
+      (c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase()
+    )?.value;
 
   const getStatusColor = (status?: string | SimStatus) => {
     const s = String(status || '').toLowerCase();
@@ -196,6 +279,8 @@ const SimResourceDetail: React.FC = () => {
       // New ResourceStatus values
       case 'available': return 'green';
       case 'reserved': return 'gold';
+      case 'inuse': return 'blue';
+      case 'disposed': return 'default';
       case 'standby': return 'cyan';
       case 'suspended': return 'orange';
       case 'alarm': return 'red';
@@ -213,7 +298,26 @@ const SimResourceDetail: React.FC = () => {
 
   const getDisplayStatus = () => (sim as any).resourceStatus || '-';
 
-  const formatDate = (val?: string) => (val ? new Date(val).toLocaleString() : '-');
+  const formatStatusLabel = (val?: string) => {
+    const s = String(val || '').toLowerCase();
+    if (s === 'inuse') return 'In use';
+    if (s === 'disposed') return 'Disposed';
+    if (!val) return '-';
+    return String(val);
+  };
+
+  const getRelatedPartyName = (role: string) => {
+    const arr = (sim as any)?.relatedParty || [];
+    const p = Array.isArray(arr)
+      ? arr.find(
+          (x: any) => String(x?.role || '').toLowerCase() === role.toLowerCase()
+        )
+      : undefined;
+    return p?.name || p?.id || '-';
+  };
+
+  const formatDate = (val?: string) =>
+    val ? new Date(val).toLocaleString() : '-';
 
   const getAvailableActions = () => {
     const actions = [] as any[];
@@ -225,7 +329,7 @@ const SimResourceDetail: React.FC = () => {
       case 'unknown':
         actions.push({
           key: 'activate',
-          label: 'Activate',
+          label: t('actions.activate'),
           icon: <PlayCircleOutlined />,
           onClick: () => {
             setSelectedAction(LifecycleAction.ACTIVATE);
@@ -234,7 +338,7 @@ const SimResourceDetail: React.FC = () => {
         });
         actions.push({
           key: 'retire',
-          label: 'Retire',
+          label: t('actions.retire'),
           icon: <RestOutlined />,
           danger: true,
           onClick: () => {
@@ -244,9 +348,10 @@ const SimResourceDetail: React.FC = () => {
         });
         break;
       case 'reserved':
+      case 'inuse':
         actions.push({
           key: 'suspend',
-          label: 'Suspend',
+          label: t('actions.suspend'),
           icon: <PauseCircleOutlined />,
           onClick: () => {
             setSelectedAction(LifecycleAction.SUSPEND);
@@ -255,7 +360,7 @@ const SimResourceDetail: React.FC = () => {
         });
         actions.push({
           key: 'terminate',
-          label: 'Terminate',
+          label: t('actions.terminate'),
           icon: <StopOutlined />,
           onClick: () => {
             setSelectedAction(LifecycleAction.TERMINATE);
@@ -266,7 +371,7 @@ const SimResourceDetail: React.FC = () => {
       case 'suspended':
         actions.push({
           key: 'activate',
-          label: 'Reactivate',
+          label: t('actions.activate'),
           icon: <PlayCircleOutlined />,
           onClick: () => {
             setSelectedAction(LifecycleAction.ACTIVATE);
@@ -275,7 +380,7 @@ const SimResourceDetail: React.FC = () => {
         });
         actions.push({
           key: 'terminate',
-          label: 'Terminate',
+          label: t('actions.terminate'),
           icon: <StopOutlined />,
           onClick: () => {
             setSelectedAction(LifecycleAction.TERMINATE);
@@ -284,7 +389,7 @@ const SimResourceDetail: React.FC = () => {
         });
         actions.push({
           key: 'retire',
-          label: 'Retire',
+          label: t('actions.retire'),
           icon: <RestOutlined />,
           danger: true,
           onClick: () => {
@@ -296,7 +401,7 @@ const SimResourceDetail: React.FC = () => {
       case 'cancelled':
         actions.push({
           key: 'release',
-          label: 'Release',
+          label: t('actions.release'),
           icon: <UnlockOutlined />,
           onClick: () => {
             setSelectedAction(LifecycleAction.RELEASE);
@@ -305,7 +410,7 @@ const SimResourceDetail: React.FC = () => {
         });
         actions.push({
           key: 'retire',
-          label: 'Retire',
+          label: t('actions.retire'),
           icon: <RestOutlined />,
           danger: true,
           onClick: () => {
@@ -318,7 +423,7 @@ const SimResourceDetail: React.FC = () => {
         break;
     }
 
-    if (status === 'available' && hasRole('sim_admin')) {
+    if ((status === 'available' || status === 'disposed') && hasRole('sim_admin')) {
       actions.push({
         type: 'divider' as const,
       });
@@ -329,8 +434,8 @@ const SimResourceDetail: React.FC = () => {
         danger: true,
         onClick: () => {
           Modal.confirm({
-            title: 'Delete SIM Resource',
-            content: `Are you sure you want to delete SIM ${getChar(sim, 'ICCID')}? This action cannot be undone.`,
+            title: t('titles.deleteSimResource'),
+            content: t('messages.confirmDeleteSim', { iccid: getChar(sim, 'ICCID') }),
             okType: 'danger',
             onOk: () => deleteMutation.mutate(),
           });
@@ -340,6 +445,13 @@ const SimResourceDetail: React.FC = () => {
 
     return actions;
   };
+
+  // Sensitive characteristic helpers
+  const isSensitiveCharName = (name?: string) => {
+    const s = String(name || '').toLowerCase();
+    return s === 'pin' || s === 'puk1' || s === 'puk2' || s === 'esim_act_code';
+  };
+  const SENSITIVE_KEYS = ['PIN', 'PUK1', 'PUK2', 'ESIM_ACT_CODE'] as const;
 
   const handleEdit = () => {
     form.setFieldsValue({
@@ -351,11 +463,17 @@ const SimResourceDetail: React.FC = () => {
       operationalState: (sim as any)?.operationalState || '',
       usageState: (sim as any)?.usageState || '',
       resourceStatus: String(getDisplayStatus() || '').toLowerCase(),
-      characteristics: (sim as any)?.resourceCharacteristic?.map((c: any) => ({
-        name: c?.name,
-        value: c?.value,
-        valueType: c?.valueType || 'string',
-      })) || [],
+      // Exclude sensitive items from the generic list
+      characteristics:
+        ((sim as any)?.resourceCharacteristic || [])
+          .filter((c: any) => !isSensitiveCharName(c?.name))
+          .map((c: any) => ({
+            name: c?.name,
+            value: c?.value,
+            valueType: c?.valueType || 'string',
+          })) || [],
+      // Initialize secure editor group empty (leave blank to keep)
+      sensitive: {},
     });
     setEditModalVisible(true);
   };
@@ -364,8 +482,14 @@ const SimResourceDetail: React.FC = () => {
     // Start from form-provided list so user explicitly controls add/update/delete
     let rc: any[] = Array.isArray(values.characteristics)
       ? values.characteristics
-          .filter((x: any) => x && x.name && (x.value !== undefined && x.value !== ''))
-          .map((x: any) => ({ name: x.name, value: x.value, valueType: x.valueType || 'string' }))
+          .filter(
+            (x: any) => x && x.name && x.value !== undefined && x.value !== ''
+          )
+          .map((x: any) => ({
+            name: x.name,
+            value: x.value,
+            valueType: x.valueType || 'string',
+          }))
       : [];
 
     // Merge IMSI convenience field into characteristics (add/update/remove)
@@ -374,12 +498,34 @@ const SimResourceDetail: React.FC = () => {
       rc.push({ name: 'IMSI', value: values.imsi, valueType: 'string' });
     }
 
+    // Add sensitive characteristics: if provided, use new value; otherwise keep existing
+    const sensitive = values?.sensitive || {};
+    SENSITIVE_KEYS.forEach((key) => {
+      const provided = sensitive?.[key];
+      if (provided !== undefined && String(provided).trim() !== '') {
+        rc.push({ name: key, value: provided, valueType: 'string' });
+      } else {
+        const existingVal = getChar(sim, key);
+        if (
+          existingVal !== undefined &&
+          existingVal !== null &&
+          String(existingVal) !== ''
+        ) {
+          rc.push({ name: key, value: existingVal, valueType: 'string' });
+        }
+      }
+    });
+
     // Deduplicate by name (case-insensitive); keep last occurrence
     const dedup = new Map<string, any>();
     rc.forEach((c) => {
       const key = String(c.name || '').trim();
       if (!key) return;
-      dedup.set(key.toLowerCase(), { name: key, value: c.value, valueType: c.valueType || 'string' });
+      dedup.set(key.toLowerCase(), {
+        name: key,
+        value: c.value,
+        valueType: c.valueType || 'string',
+      });
     });
     rc = Array.from(dedup.values());
 
@@ -388,19 +534,37 @@ const SimResourceDetail: React.FC = () => {
       resourceCharacteristic: rc, // send full list; empty array clears all characteristics
     };
 
-    if (values.name !== undefined && String(values.name).trim() !== '') payload.name = values.name;
-    if (values.category !== undefined && String(values.category).trim() !== '') payload.category = values.category;
-    if (values.administrativeState !== undefined && String(values.administrativeState).trim() !== '') payload.administrativeState = values.administrativeState;
-    if (values.operationalState !== undefined && String(values.operationalState).trim() !== '') payload.operationalState = values.operationalState;
-    if (values.usageState !== undefined && String(values.usageState).trim() !== '') payload.usageState = values.usageState;
-    if (values.resourceStatus !== undefined && String(values.resourceStatus).trim() !== '') payload.resourceStatus = values.resourceStatus;
+    if (values.name !== undefined && String(values.name).trim() !== '')
+      payload.name = values.name;
+    if (values.category !== undefined && String(values.category).trim() !== '')
+      payload.category = values.category;
+    if (
+      values.administrativeState !== undefined &&
+      String(values.administrativeState).trim() !== ''
+    )
+      payload.administrativeState = values.administrativeState;
+    if (
+      values.operationalState !== undefined &&
+      String(values.operationalState).trim() !== ''
+    )
+      payload.operationalState = values.operationalState;
+    if (
+      values.usageState !== undefined &&
+      String(values.usageState).trim() !== ''
+    )
+      payload.usageState = values.usageState;
+    if (
+      values.resourceStatus !== undefined &&
+      String(values.resourceStatus).trim() !== ''
+    )
+      payload.resourceStatus = values.resourceStatus;
 
     updateMutation.mutate(payload);
   };
 
   const handleLifecycleAction = (values: any) => {
     const reason = values.reason;
-    
+
     switch (selectedAction) {
       case LifecycleAction.ACTIVATE:
         activateMutation.mutate();
@@ -451,12 +615,21 @@ const SimResourceDetail: React.FC = () => {
             extra={
               <Space>
                 {hasRole('sim_admin') && (
-                  <Button
-                    icon={<EditOutlined />}
-                    onClick={handleEdit}
-                  >
+                  <Button icon={<EditOutlined />} onClick={handleEdit}>
                     {t('actions.edit')}
                   </Button>
+                )}
+                {hasRole('sim_admin') && (
+                  <>
+                    <Button onClick={() => setAssignModalVisible(true)}>
+                      {t('actions.assign', {
+                        defaultValue: 'Assign to Account',
+                      })}
+                    </Button>
+                    <Button onClick={() => setUnassignModalVisible(true)}>
+                      {t('actions.unassign', { defaultValue: 'Unassign' })}
+                    </Button>
+                  </>
                 )}
                 {getAvailableActions().length > 0 && (
                   <Dropdown
@@ -475,29 +648,47 @@ const SimResourceDetail: React.FC = () => {
             <Descriptions column={{ xs: 1, sm: 2 }} bordered>
               <Descriptions.Item label={t('sim.iccid')}>
                 <Text
-                  copyable={!!(getChar(sim, 'ICCID') || '-')} 
-                  code={!!(getChar(sim, 'ICCID') || '-')} 
-               >
+                  copyable={!!(getChar(sim, 'ICCID') || '-')}
+                  code={!!(getChar(sim, 'ICCID') || '-')}
+                >
                   {getChar(sim, 'ICCID') || '-'}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.imsi')}>
-                <Text copyable={!!getChar(sim, 'IMSI')} code={!!getChar(sim, 'IMSI')}>
+                <Text
+                  copyable={!!getChar(sim, 'IMSI')}
+                  code={!!getChar(sim, 'IMSI')}
+                >
                   {getChar(sim, 'IMSI') || '-'}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.type')}>
-                <Tag color={String(getChar(sim, 'SIMType') || (sim as any)?.type || '').toLowerCase().includes('esim') ? 'cyan' : 'blue'}>
-                  {getChar(sim, 'SIMType') || (sim as any)?.type || (sim as any)['@type'] || '-'}
+                <Tag
+                  color={
+                    String(getChar(sim, 'SIMType') || (sim as any)?.type || '')
+                      .toLowerCase()
+                      .includes('esim')
+                      ? 'cyan'
+                      : 'blue'
+                  }
+                >
+                  {getChar(sim, 'SIMType') ||
+                    (sim as any)?.type ||
+                    (sim as any)['@type'] ||
+                    '-'}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.status')}>
                 <Tag color={getStatusColor(getDisplayStatus())}>
-                  {getDisplayStatus()}
+                  {t(`sim.statusValues.${String(getDisplayStatus()).toLowerCase()==='inuse'?'inUse':String(getDisplayStatus())}`, { defaultValue: formatStatusLabel(getDisplayStatus()) })}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={t('sim.state')}>
-                <Tag color={getStatusColor(String(getChar(sim, 'RESOURCE_STATE') || ''))}>
+                <Tag
+                  color={getStatusColor(
+                    String(getChar(sim, 'RESOURCE_STATE') || '')
+                  )}
+                >
                   {getChar(sim, 'RESOURCE_STATE') || '-'}
                 </Tag>
               </Descriptions.Item>
@@ -519,29 +710,114 @@ const SimResourceDetail: React.FC = () => {
             </Descriptions>
           </Card>
 
-          {sim.resourceCharacteristic && sim.resourceCharacteristic.length > 0 && (
-            <Card title={t('titles.resourceCharacteristics')} style={{ marginTop: 16 }}>
+          {hasRole('sim_admin') && (
+            <Card
+              title={t('titles.sensitiveInfo', {
+                defaultValue: 'Sensitive Information',
+              })}
+              style={{ marginTop: 16 }}
+            >
               <Descriptions column={1} bordered>
-                {sim.resourceCharacteristic.map((char, index) => (
-                  <Descriptions.Item key={index} label={char.name}>
-                    {JSON.stringify(char.value)}
-                  </Descriptions.Item>
-                ))}
+                {['PIN', 'PUK1', 'PUK2', 'ESIM_ACT_CODE'].map((key) => {
+                  const val = getChar(sim, key);
+                  const shown =
+                    key === 'PIN'
+                      ? showPIN
+                      : key === 'PUK1'
+                        ? showPUK1
+                        : key === 'PUK2'
+                          ? showPUK2
+                          : showEAct;
+                  const setShown =
+                    key === 'PIN'
+                      ? setShowPIN
+                      : key === 'PUK1'
+                        ? setShowPUK1
+                        : key === 'PUK2'
+                          ? setShowPUK2
+                          : setShowEAct;
+                  return (
+                    <Descriptions.Item key={key} label={key}>
+                      <Space>
+                        <Text code>
+                          {val ? (shown ? String(val) : '••••••') : '-'}
+                        </Text>
+                        {val && (
+                          <>
+                            <Button
+                              size="small"
+                              icon={
+                                shown ? (
+                                  <EyeInvisibleOutlined />
+                                ) : (
+                                  <EyeOutlined />
+                                )
+                              }
+                              onClick={() => setShown(!shown)}
+                            />
+                            <Button
+                              size="small"
+                              icon={<CopyOutlined />}
+                              onClick={() => {
+                                navigator.clipboard.writeText(String(val));
+                                message.success(
+                                  t('messages.copiedToClipboard', {
+                                    defaultValue: 'Copied to clipboard',
+                                  })
+                                );
+                              }}
+                            />
+                          </>
+                        )}
+                      </Space>
+                    </Descriptions.Item>
+                  );
+                })}
               </Descriptions>
             </Card>
           )}
-        </Col>
 
+          {Array.isArray(sim.resourceCharacteristic) &&
+            sim.resourceCharacteristic.filter(
+              (c: any) => !isSensitiveCharName(c?.name)
+            ).length > 0 && (
+              <Card
+                title={t('titles.resourceCharacteristics')}
+                style={{ marginTop: 16 }}
+              >
+                <Descriptions column={1} bordered>
+                  {sim.resourceCharacteristic
+                    .filter((char: any) => !isSensitiveCharName(char?.name))
+                    .map((char: any, index: number) => (
+                      <Descriptions.Item key={index} label={char.name}>
+                        {JSON.stringify(char.value)}
+                      </Descriptions.Item>
+                    ))}
+                </Descriptions>
+              </Card>
+            )}
+        </Col>
         <Col xs={24} lg={8}>
-          <Card title={<><HistoryOutlined /> {t('titles.activityHistory')}</>}>
+          <Card
+            title={
+              <>
+                <HistoryOutlined /> {t('titles.activityHistory')}
+              </>
+            }
+          >
             <Timeline
               items={[
                 {
                   color: 'green',
                   children: (
                     <>
-                      <div><strong>Created</strong></div>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      <div>
+                        <strong>Created</strong>
+                      </div>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
                         {formatDate(sim.createdDate)}
                       </Typography.Text>
                     </>
@@ -551,9 +827,16 @@ const SimResourceDetail: React.FC = () => {
                   color: getStatusColor(getDisplayStatus()),
                   children: (
                     <>
-                      <div><strong>Status: {getDisplayStatus()}</strong></div>
-                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                        {sim.createdDate ? new Date(sim.createdDate).toLocaleString() : ''}
+                      <div>
+                        <strong>Status: {getDisplayStatus()}</strong>
+                      </div>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12 }}
+                      >
+                        {sim.createdDate
+                          ? new Date(sim.createdDate).toLocaleString()
+                          : ''}
                       </Typography.Text>
                     </>
                   ),
@@ -563,10 +846,17 @@ const SimResourceDetail: React.FC = () => {
           </Card>
 
           {sim.resourceRelationship && sim.resourceRelationship.length > 0 && (
-            <Card title={t('titles.relatedResources')} style={{ marginTop: 16 }}>
+            <Card
+              title={t('titles.relatedResources')}
+              style={{ marginTop: 16 }}
+            >
               {sim.resourceRelationship.map((rel, index) => {
                 const targetId = (rel as any)?.resource?.id;
-                const label = (rel as any)?.resource?.iccid || (rel as any)?.resource?.name || targetId || '-';
+                const label =
+                  (rel as any)?.resource?.iccid ||
+                  (rel as any)?.resource?.name ||
+                  targetId ||
+                  '-';
                 return (
                   <div key={index} style={{ marginBottom: 8 }}>
                     <Tag>{rel.relationshipType}</Tag>
@@ -574,7 +864,9 @@ const SimResourceDetail: React.FC = () => {
                       type="link"
                       size="small"
                       disabled={!targetId}
-                      onClick={() => targetId && navigate(`/sim-resources/${targetId}`)}
+                      onClick={() =>
+                        targetId && navigate(`/sim-resources/${targetId}`)
+                      }
                     >
                       {label}
                     </Button>
@@ -583,6 +875,240 @@ const SimResourceDetail: React.FC = () => {
               })}
             </Card>
           )}
+
+          <Card
+            title={t('titles.allocation', { defaultValue: 'Allocation' })}
+            style={{ marginTop: 16 }}
+          >
+            <Descriptions column={1} bordered>
+              <Descriptions.Item label="Distributor">
+                {getRelatedPartyName('Distributor')}
+              </Descriptions.Item>
+              <Descriptions.Item label="Representative">
+                {getRelatedPartyName('Representative')}
+              </Descriptions.Item>
+              <Descriptions.Item label="Customer">
+                {getRelatedPartyName('Customer')}
+              </Descriptions.Item>
+            </Descriptions>
+            {hasRole('sim_admin') && (
+              <div style={{ marginTop: 12 }}>
+                {/* Distributor */}
+                <Row style={{ marginBottom: 12 }} align="middle">
+                  <Col span={24}>
+                    <div style={{ marginBottom: 4, fontWeight: 600 }}>
+                      Distributor
+                    </div>
+                    <Space.Compact style={{ width: '100%' }}>
+                      <Input
+                        style={{ width: 220 }}
+                        placeholder="ID"
+                        value={distId}
+                        onChange={(e) => setDistId(e.target.value)}
+                      />
+                      <Input
+                        style={{ width: 260 }}
+                        placeholder="Name (optional)"
+                        value={distName}
+                        onChange={(e) => setDistName(e.target.value)}
+                      />
+                      <Select
+                        value={distType}
+                        onChange={(v) => setDistType(v)}
+                        style={{ width: 160 }}
+                      >
+                        <Select.Option value="Party">Party</Select.Option>
+                        <Select.Option value="Organization">
+                          Organization
+                        </Select.Option>
+                        <Select.Option value="Individual">
+                          Individual
+                        </Select.Option>
+                      </Select>
+                      <Button
+                        type="primary"
+                        disabled={!(distId || distName)}
+                        onClick={async () => {
+                          const payload: any = distId
+                            ? { id: distId }
+                            : { name: distName };
+                          payload['@referredType'] = distType;
+                          const res = await apiService.setAllocationRelatedParty(
+                            id!,
+                            'Distributor',
+                            payload
+                          );
+                          if (res.success) {
+                            message.success('Distributor set');
+                            queryClient.invalidateQueries(['simResource', id]);
+                          }
+                        }}
+                      >
+                        Set
+                      </Button>
+                      <Button
+                        danger
+                        onClick={async () => {
+                          const res = await apiService.clearAllocationByRole(
+                            id!,
+                            'Distributor'
+                          );
+                          if (res.success) {
+                            message.success('Distributor cleared');
+                            queryClient.invalidateQueries(['simResource', id]);
+                          }
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </Space.Compact>
+                  </Col>
+                </Row>
+                {/* Representative */}
+                <Row style={{ marginBottom: 12 }} align="middle">
+                  <Col span={24}>
+                    <div style={{ marginBottom: 4, fontWeight: 600 }}>
+                      Representative
+                    </div>
+                    <Space.Compact style={{ width: '100%' }}>
+                      <Input
+                        style={{ width: 220 }}
+                        placeholder="ID"
+                        value={repId}
+                        onChange={(e) => setRepId(e.target.value)}
+                      />
+                      <Input
+                        style={{ width: 260 }}
+                        placeholder="Name (optional)"
+                        value={repName}
+                        onChange={(e) => setRepName(e.target.value)}
+                      />
+                      <Select
+                        value={repType}
+                        onChange={(v) => setRepType(v)}
+                        style={{ width: 160 }}
+                      >
+                        <Select.Option value="Party">Party</Select.Option>
+                        <Select.Option value="Organization">
+                          Organization
+                        </Select.Option>
+                        <Select.Option value="Individual">
+                          Individual
+                        </Select.Option>
+                      </Select>
+                      <Button
+                        type="primary"
+                        disabled={!(repId || repName)}
+                        onClick={async () => {
+                          const payload: any = repId
+                            ? { id: repId }
+                            : { name: repName };
+                          payload['@referredType'] = repType;
+                          const res = await apiService.setAllocationRelatedParty(
+                            id!,
+                            'Representative',
+                            payload
+                          );
+                          if (res.success) {
+                            message.success('Representative set');
+                            queryClient.invalidateQueries(['simResource', id]);
+                          }
+                        }}
+                      >
+                        Set
+                      </Button>
+                      <Button
+                        danger
+                        onClick={async () => {
+                          const res = await apiService.clearAllocationByRole(
+                            id!,
+                            'Representative'
+                          );
+                          if (res.success) {
+                            message.success('Representative cleared');
+                            queryClient.invalidateQueries(['simResource', id]);
+                          }
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </Space.Compact>
+                  </Col>
+                </Row>
+                {/* Customer */}
+                <Row align="middle">
+                  <Col span={24}>
+                    <div style={{ marginBottom: 4, fontWeight: 600 }}>
+                      Customer
+                    </div>
+                    <Space.Compact style={{ width: '100%' }}>
+                      <Input
+                        style={{ width: 220 }}
+                        placeholder="ID"
+                        value={custId}
+                        onChange={(e) => setCustId(e.target.value)}
+                      />
+                      <Input
+                        style={{ width: 260 }}
+                        placeholder="Name (optional)"
+                        value={custName}
+                        onChange={(e) => setCustName(e.target.value)}
+                      />
+                      <Select
+                        value={custType}
+                        onChange={(v) => setCustType(v)}
+                        style={{ width: 160 }}
+                      >
+                        <Select.Option value="Party">Party</Select.Option>
+                        <Select.Option value="Organization">
+                          Organization
+                        </Select.Option>
+                        <Select.Option value="Individual">
+                          Individual
+                        </Select.Option>
+                      </Select>
+                      <Button
+                        type="primary"
+                        disabled={!(custId || custName)}
+                        onClick={async () => {
+                          const payload: any = custId
+                            ? { id: custId }
+                            : { name: custName };
+                          payload['@referredType'] = custType;
+                          const res = await apiService.setAllocationRelatedParty(
+                            id!,
+                            'Customer',
+                            payload
+                          );
+                          if (res.success) {
+                            message.success('Customer set');
+                            queryClient.invalidateQueries(['simResource', id]);
+                          }
+                        }}
+                      >
+                        Set
+                      </Button>
+                      <Button
+                        danger
+                        onClick={async () => {
+                          const res = await apiService.clearAllocationByRole(
+                            id!,
+                            'Customer'
+                          );
+                          if (res.success) {
+                            message.success('Customer cleared');
+                            queryClient.invalidateQueries(['simResource', id]);
+                          }
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </Space.Compact>
+                  </Col>
+                </Row>
+              </div>
+            )}
+          </Card>
         </Col>
       </Row>
 
@@ -592,133 +1118,269 @@ const SimResourceDetail: React.FC = () => {
         open={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
         footer={null}
+        width={1000}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleUpdate}
-        >
-          <Title level={5}>Resource Characteristics</Title>
-          <Form.List name="characteristics">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Row key={key} gutter={8} align="middle" style={{ marginBottom: 8 }}>
-                    <Col xs={24} sm={7}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'name']}
-                        rules={[{ required: true, message: 'Name is required' }]}
-                        label={name === 0 ? 'Name' : undefined}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <Input placeholder="Name (e.g., IMSI)" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={13}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'value']}
-                        rules={[{ required: true, message: 'Value is required' }]}
-                        label={name === 0 ? 'Value' : undefined}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <Input placeholder="Value" />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={4}>
-                      <Form.Item label={name === 0 ? ' ' : undefined} colon={false} style={{ marginBottom: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', height: 32 }}>
-                          <Button danger icon={<MinusCircleOutlined />} onClick={() => remove(name)} />
-                        </div>
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                ))}
-                <Button type="dashed" block icon={<PlusOutlined />} onClick={() => add({ valueType: 'string' })}>
-                  Add Characteristic
-                </Button>
-                <Divider />
-              </>
-            )}
-          </Form.List>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Name" name="name">
-                <Input placeholder="Enter name" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Category" name="category">
-                <Input placeholder="Enter category" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Resource Status" name="resourceStatus">
-                <Select allowClear placeholder="Select status">
-                  {RESOURCE_STATUS_VALUES.map((s) => (
-                    <Select.Option key={s} value={s}>{s}</Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Administrative State" name="administrativeState">
-                <Select allowClear placeholder="Select administrative state">
-                  <Select.Option value="locked">locked</Select.Option>
-                  <Select.Option value="unlocked">unlocked</Select.Option>
-                  <Select.Option value="shutdown">shutdown</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Operational State" name="operationalState">
-                <Select allowClear placeholder="Select operational state">
-                  <Select.Option value="enable">enable</Select.Option>
-                  <Select.Option value="disable">disable</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item label="Usage State" name="usageState">
-                <Select allowClear placeholder="Select usage state">
-                  <Select.Option value="idle">idle</Select.Option>
-                  <Select.Option value="active">active</Select.Option>
-                  <Select.Option value="busy">busy</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item
-            label="IMSI"
-            name="imsi"
-            rules={[
+        <Form form={form} layout="vertical" onFinish={handleUpdate}>
+          <Tabs
+            items={[
               {
-                pattern: /^\d{15}$/,
-                message: 'IMSI must be 15 digits',
+                key: 'general',
+                label: t('titles.basicInformation', {
+                  defaultValue: 'Basic Information',
+                }),
+                children: (
+                  <>
+                    <Row gutter={16}>
+                      <Col xs={24} sm={12}>
+                        <Form.Item label="Name" name="name">
+                          <Input placeholder="Enter name" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Form.Item label="Category" name="category">
+                          <Input placeholder="Enter category" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Form.Item label="Description" name="description">
+                      <TextArea rows={3} placeholder="Enter description" />
+                    </Form.Item>
+                  </>
+                ),
+              },
+              {
+                key: 'states',
+                label: 'States',
+                children: (
+                  <>
+                    <Row gutter={16}>
+                      <Col xs={24} sm={12}>
+                        <Form.Item
+                          label="Resource Status"
+                          name="resourceStatus"
+                        >
+                          <Select allowClear placeholder="Select status">
+                            {RESOURCE_STATUS_VALUES.map((s) => (
+                              <Select.Option key={s} value={s}>
+                                {s}
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Form.Item
+                          label="Administrative State"
+                          name="administrativeState"
+                        >
+                          <Select
+                            allowClear
+                            placeholder="Select administrative state"
+                          >
+                            <Select.Option value="locked">locked</Select.Option>
+                            <Select.Option value="unlocked">
+                              unlocked
+                            </Select.Option>
+                            <Select.Option value="shutdown">
+                              shutdown
+                            </Select.Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Row gutter={16}>
+                      <Col xs={24} sm={12}>
+                        <Form.Item
+                          label="Operational State"
+                          name="operationalState"
+                        >
+                          <Select
+                            allowClear
+                            placeholder="Select operational state"
+                          >
+                            <Select.Option value="enable">enable</Select.Option>
+                            <Select.Option value="disable">
+                              disable
+                            </Select.Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Form.Item label="Usage State" name="usageState">
+                          <Select allowClear placeholder="Select usage state">
+                            <Select.Option value="idle">idle</Select.Option>
+                            <Select.Option value="active">active</Select.Option>
+                            <Select.Option value="busy">busy</Select.Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </>
+                ),
+              },
+              {
+                key: 'characteristics',
+                label: t('titles.resourceCharacteristics'),
+                children: (
+                  <>
+                    <Form.Item
+                      label="IMSI"
+                      name="imsi"
+                      rules={[
+                        {
+                          pattern: /^\d{15}$/,
+                          message: 'IMSI must be 15 digits',
+                        },
+                      ]}
+                    >
+                      <Input placeholder="Enter IMSI" />
+                    </Form.Item>
+
+                    <Title level={5}>Resource Characteristics</Title>
+                    <Form.List name="characteristics">
+                      {(fields, { add, remove }) => (
+                        <>
+                          {fields.map(({ key, name, ...restField }) => (
+                            <Row
+                              key={key}
+                              gutter={8}
+                              align="middle"
+                              style={{ marginBottom: 8 }}
+                            >
+                              <Col xs={24} sm={7}>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, 'name']}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: 'Name is required',
+                                    },
+                                  ]}
+                                  label={name === 0 ? 'Name' : undefined}
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  <Input placeholder="Name (e.g., IMSI)" />
+                                </Form.Item>
+                              </Col>
+                              <Col xs={24} sm={13}>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, 'value']}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: 'Value is required',
+                                    },
+                                  ]}
+                                  label={name === 0 ? 'Value' : undefined}
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  <Input placeholder="Value" />
+                                </Form.Item>
+                              </Col>
+                              <Col xs={24} sm={4}>
+                                <Form.Item
+                                  label={name === 0 ? ' ' : undefined}
+                                  colon={false}
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      height: 32,
+                                    }}
+                                  >
+                                    <Button
+                                      danger
+                                      icon={<MinusCircleOutlined />}
+                                      onClick={() => remove(name)}
+                                    />
+                                  </div>
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          ))}
+                          <Button
+                            type="dashed"
+                            block
+                            icon={<PlusOutlined />}
+                            onClick={() => add({ valueType: 'string' })}
+                          >
+                            Add Characteristic
+                          </Button>
+                          <Divider />
+                        </>
+                      )}
+                    </Form.List>
+                  </>
+                ),
+              },
+              {
+                key: 'sensitive',
+                label: t('titles.sensitiveInfo', {
+                  defaultValue: 'Sensitive Information',
+                }),
+                children: (
+                  <>
+                    <Row gutter={16}>
+                      <Col xs={24} sm={12}>
+                        <Form.Item
+                          label="PIN"
+                          name={['sensitive', 'PIN']}
+                          extra={t('messages.leaveBlankToKeep', {
+                            defaultValue: 'Leave blank to keep current',
+                          })}
+                        >
+                          <Input.Password placeholder="Enter new PIN (optional)" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Form.Item
+                          label="PUK1"
+                          name={['sensitive', 'PUK1']}
+                          extra={t('messages.leaveBlankToKeep', {
+                            defaultValue: 'Leave blank to keep current',
+                          })}
+                        >
+                          <Input.Password placeholder="Enter new PUK1 (optional)" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Row gutter={16}>
+                      <Col xs={24} sm={12}>
+                        <Form.Item
+                          label="PUK2"
+                          name={['sensitive', 'PUK2']}
+                          extra={t('messages.leaveBlankToKeep', {
+                            defaultValue: 'Leave blank to keep current',
+                          })}
+                        >
+                          <Input.Password placeholder="Enter new PUK2 (optional)" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Form.Item
+                          label="ESIM_ACT_CODE"
+                          name={['sensitive', 'ESIM_ACT_CODE']}
+                          extra={t('messages.leaveBlankToKeep', {
+                            defaultValue: 'Leave blank to keep current',
+                          })}
+                        >
+                          <Input.Password placeholder="Enter new activation code (optional)" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </>
+                ),
               },
             ]}
-          >
-            <Input placeholder="Enter IMSI" />
-          </Form.Item>
-
-          <Form.Item label="Description" name="description">
-            <TextArea rows={3} placeholder="Enter description" />
-          </Form.Item>
+          />
 
           <div style={{ textAlign: 'right' }}>
             <Space>
-              <Button onClick={() => setEditModalVisible(false)}>
-                Cancel
-              </Button>
+              <Button onClick={() => setEditModalVisible(false)}>Cancel</Button>
               <Button
                 type="primary"
                 htmlType="submit"
@@ -731,6 +1393,50 @@ const SimResourceDetail: React.FC = () => {
         </Form>
       </Modal>
 
+      {/* Assign to Account Modal */}
+      <Modal
+        title={t('actions.assign', { defaultValue: 'Assign to Account' })}
+        open={assignModalVisible}
+        onCancel={() => setAssignModalVisible(false)}
+        onOk={() => assignMutation.mutate()}
+        confirmLoading={assignMutation.isLoading}
+      >
+        <Form layout="vertical">
+          <Form.Item
+            label={t('fields.msisdn', { defaultValue: 'MSISDN / Account ID' })}
+            required
+          >
+            <Input
+              value={assignMsisdn}
+              onChange={(e) => setAssignMsisdn(e.target.value)}
+              placeholder="e.g., 905xxxxxxxxx"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Unassign Modal */}
+      <Modal
+        title={t('actions.unassign', { defaultValue: 'Unassign SIM' })}
+        open={unassignModalVisible}
+        onCancel={() => setUnassignModalVisible(false)}
+        onOk={() => unassignMutation.mutate()}
+        confirmLoading={unassignMutation.isLoading}
+      >
+        <p>
+          {t('messages.selectUnassignBehavior', {
+            defaultValue: 'Choose resulting status after unassigning:',
+          })}
+        </p>
+        <Radio.Group
+          value={unassignBehavior}
+          onChange={(e) => setUnassignBehavior(e.target.value)}
+        >
+          <Radio value="reserved">{t('sim.statusValues.reserved', { defaultValue: 'Reserved' })}</Radio>
+          <Radio value="disposed">{t('sim.statusValues.disposed', { defaultValue: 'Disposed' })}</Radio>
+        </Radio.Group>
+      </Modal>
+
       {/* Lifecycle Action Modal */}
       <Modal
         title={`${actionLabels[selectedAction!]} SIM Resource`}
@@ -738,27 +1444,29 @@ const SimResourceDetail: React.FC = () => {
         onCancel={() => setActionModalVisible(false)}
         footer={null}
       >
-        <Form
-          layout="vertical"
-          onFinish={handleLifecycleAction}
-        >
+        <Form layout="vertical" onFinish={handleLifecycleAction}>
           <p>
-            Are you sure you want to <strong>{actionLabels[selectedAction!]?.toLowerCase()}</strong> this SIM resource?
+            Are you sure you want to{' '}
+            <strong>{actionLabels[selectedAction!]?.toLowerCase()}</strong> this
+            SIM resource?
           </p>
-          
-          <div style={{ padding: '8px 12px', backgroundColor: 'var(--table-row-hover-bg)', borderRadius: 4, margin: '16px 0' }}>
+
+          <div
+            style={{
+              padding: '8px 12px',
+              backgroundColor: 'var(--table-row-hover-bg)',
+              borderRadius: 4,
+              margin: '16px 0',
+            }}
+          >
             <Text code>{getChar(sim, 'ICCID')}</Text>
           </div>
 
-          {(selectedAction === LifecycleAction.SUSPEND || selectedAction === LifecycleAction.TERMINATE || selectedAction === LifecycleAction.RETIRE) && (
-            <Form.Item
-              label="Reason (Optional)"
-              name="reason"
-            >
-              <TextArea
-                rows={3}
-                placeholder="Enter reason for this action"
-              />
+          {(selectedAction === LifecycleAction.SUSPEND ||
+            selectedAction === LifecycleAction.TERMINATE ||
+            selectedAction === LifecycleAction.RETIRE) && (
+            <Form.Item label="Reason (Optional)" name="reason">
+              <TextArea rows={3} placeholder="Enter reason for this action" />
             </Form.Item>
           )}
 

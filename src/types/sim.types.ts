@@ -19,6 +19,8 @@ export type ResourceStatus =
   | 'alarm'
   | 'available'
   | 'reserved'
+  | 'inUse'
+  | 'disposed'
   | 'unknown'
   | 'suspended'
   | 'completed'
@@ -29,6 +31,8 @@ export const RESOURCE_STATUS_VALUES: ReadonlyArray<ResourceStatus> = [
   'alarm',
   'available',
   'reserved',
+  'inUse',
+  'disposed',
   'unknown',
   'suspended',
   'completed',
@@ -317,6 +321,12 @@ export interface SimResourceSearchCriteria {
   offset?: number;
   fields?: string;
   sort?: string;
+  // Allocation filters (TMF relatedParty based)
+  allocationDistributor?: string; // party name or id
+  allocationRepresentative?: string; // party name or id
+  allocationCustomer?: string; // party name or id
+  // Generic custom characteristic filters
+  characteristicFilters?: { name: string; value: string }[];
 }
 
 export interface BatchSimImportRequest {

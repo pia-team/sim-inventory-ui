@@ -54,7 +54,16 @@
     "release": "Libérer",
     "retire": "Retirer",
     "view": "Voir",
-    "update": "Mettre à jour"
+    "update": "Mettre à jour",
+    "setMarketplace": "Définir Marketplace",
+    "reserve": "Définir Réservé",
+    "dispose": "Définir Mis au rebut",
+    "setDistributor": "Définir Distributeur",
+    "clearDistributor": "Effacer Distributeur",
+    "setRepresentative": "Définir Représentant",
+    "clearRepresentative": "Effacer Représentant",
+    "setCustomer": "Définir Client",
+    "clearCustomer": "Effacer Client"
   },
   "sim": {
     "iccid": "ICCID",
@@ -67,6 +76,9 @@
     "batchId": "ID de lot",
     "statusValues": {
       "available": "Disponible",
+      "reserved": "Réservée",
+      "inUse": "En service",
+      "disposed": "Mis au rebut",
       "allocated": "Attribuée",
       "active": "Active",
       "suspended": "Suspendue",
@@ -111,7 +123,9 @@
     "simNotFound": "Ressource SIM introuvable",
     "orderNotFound": "Commande introuvable",
     "confirmCancelOrder": "Voulez-vous vraiment annuler la commande {{id}} ?",
-    "orderCancelled": "Commande annulée avec succès"
+    "orderCancelled": "Commande annulée avec succès",
+    "updated": "Mis à jour",
+    "selectUnassignBehavior": "Choisissez le statut après la désaffectation :"
   },
   "titles": {
     "simResourceDetails": "Détails de la ressource SIM",
@@ -142,6 +156,9 @@
     "default": "Par défaut",
     "primary": "Principal"
   },
+  "fields": {
+    "marketplace": "Marketplace"
+  },
   "status": {
     "success": "Succès",
     "warning": "Avertissement",
@@ -157,6 +174,8 @@
     "exportCsv": "Exporter CSV",
     "addSim": "Ajouter une SIM",
     "batchImport": "Import par lot",
+    "showAllocationControls": "Afficher l’allocation",
+    "hideAllocationControls": "Masquer l’allocation",
     "createOrder": "Créer une commande",
     "import": "Importer",
     "createSimilarOrder": "Créer une commande similaire",
@@ -174,6 +193,9 @@
     "createdFrom": "Créé à partir de",
     "createdTo": "Créé jusqu'au",
     "imsi": "IMSI",
+    "distributor": "Distributeur",
+    "representative": "Représentant",
+    "customer": "Client",
     "orderFrom": "Commande à partir de",
     "orderTo": "Commande jusqu'au"
   },
@@ -256,6 +278,10 @@
     "available": "Disponibles",
     "active": "Actives",
     "issues": "Problèmes",
+    "reserved": "Réservées",
+    "inUse": "En service",
+    "disposed": "Mis au rebut",
+    "stateDistribution": "Répartition par état",
     "statusDistribution": "Répartition du statut des SIM",
     "recentBatches": "Lots récents",
     "recentSimActivity": "Activité SIM récente",

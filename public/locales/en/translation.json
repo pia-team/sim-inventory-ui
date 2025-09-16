@@ -54,7 +54,16 @@
     "release": "Release",
     "retire": "Retire",
     "view": "View",
-    "update": "Update"
+    "update": "Update",
+    "setMarketplace": "Set Marketplace",
+    "reserve": "Set Reserved",
+    "dispose": "Set Disposed",
+    "setDistributor": "Set Distributor",
+    "clearDistributor": "Clear Distributor",
+    "setRepresentative": "Set Representative",
+    "clearRepresentative": "Clear Representative",
+    "setCustomer": "Set Customer",
+    "clearCustomer": "Clear Customer"
   },
   "sim": {
     "iccid": "ICCID",
@@ -68,6 +77,9 @@
     "batchId": "Batch ID",
     "statusValues": {
       "available": "Available",
+      "reserved": "Reserved",
+      "inUse": "In use",
+      "disposed": "Disposed",
       "allocated": "Allocated",
       "active": "Active",
       "suspended": "Suspended",
@@ -111,7 +123,9 @@
     "simNotFound": "SIM Resource Not Found",
     "orderNotFound": "Order Not Found",
     "confirmCancelOrder": "Are you sure you want to cancel order {{id}}...?",
-    "orderCancelled": "Order cancelled successfully"
+    "orderCancelled": "Order cancelled successfully",
+    "updated": "Updated",
+    "selectUnassignBehavior": "Choose resulting status after unassigning:"
   },
   "titles": {
     "simResourceDetails": "SIM Resource Details",
@@ -142,6 +156,9 @@
     "default": "Default",
     "primary": "Primary"
   },
+  "fields": {
+    "marketplace": "Marketplace"
+  },
   "status": {
     "success": "Success",
     "warning": "Warning",
@@ -160,7 +177,9 @@
     "createOrder": "Create Order",
     "import": "Import",
     "createSimilarOrder": "Create Similar Order",
-    "viewAllOrders": "View All Orders"
+    "viewAllOrders": "View All Orders",
+    "showAllocationControls": "Show allocation",
+    "hideAllocationControls": "Hide allocation"
   },
   "placeholders": {
     "searchByIccid": "Search by ICCID",
@@ -174,6 +193,9 @@
     "createdFrom": "Created From",
     "createdTo": "Created To",
     "imsi": "IMSI",
+    "distributor": "Distributor",
+    "representative": "Representative",
+    "customer": "Customer",
     "orderFrom": "Order From",
     "orderTo": "Order To"
   },
@@ -256,6 +278,10 @@
     "available": "Available",
     "active": "Active",
     "issues": "Issues",
+    "reserved": "Reserved",
+    "inUse": "In use",
+    "disposed": "Disposed",
+    "stateDistribution": "State Distribution",
     "statusDistribution": "SIM Status Distribution",
     "recentBatches": "Recent Batches",
     "recentSimActivity": "Recent SIM Activity",

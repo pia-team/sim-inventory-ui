@@ -40,6 +40,11 @@ interface ParsedSim {
   profileType?: ProfileType;
   description?: string;
   name?: string;
+  pin?: string;
+  puk1?: string;
+  puk2?: string;
+  esimActCode?: string;
+  marketplace?: string;
   valid: boolean;
   errors: string[];
 }
@@ -96,12 +101,33 @@ const BatchImport: React.FC = () => {
     if (lines.length === 0) return [];
 
     // Skip header if present
-    const hasHeader = lines[0].toLowerCase().includes('iccid');
+    const headerLine = lines[0];
+    const hasHeader = headerLine.toLowerCase().includes('iccid');
+    const headers = hasHeader ? headerLine.split(',').map(h => h.trim().replace(/"/g, '')) : [];
     const dataLines = hasHeader ? lines.slice(1) : lines;
 
     const parsed = dataLines.map((line, index) => {
       const columns = line.split(',').map(col => col.trim().replace(/"/g, ''));
-      const sim: ParsedSim = {
+      const getByHeader = (name: string): string | undefined => {
+        const idx = headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+        if (idx >= 0) return columns[idx] || undefined;
+        return undefined;
+      };
+      const sim: ParsedSim = hasHeader ? {
+        iccid: getByHeader('ICCID') || '',
+        type: (getByHeader('Type') as SimType) || SimType.PHYSICAL,
+        profileType: (getByHeader('Profile Type') as ProfileType) || undefined,
+        description: getByHeader('Description') || undefined,
+        name: getByHeader('Name') || undefined,
+        pin: getByHeader('PIN') || undefined,
+        puk1: getByHeader('PUK1') || undefined,
+        puk2: getByHeader('PUK2') || undefined,
+        esimActCode: getByHeader('ESIM_ACT_CODE') || getByHeader('eSIM Activation Code') || undefined,
+        marketplace: getByHeader('Marketplace') || getByHeader('Marketplace custom') || getByHeader('Marketplace CUSTOM') || undefined,
+        valid: true,
+        errors: [],
+      } : {
+        // Fallback to positional parsing when no headers
         iccid: columns[0] || '',
         type: (columns[1] as SimType) || SimType.PHYSICAL,
         profileType: columns[2] as ProfileType || undefined,
@@ -307,6 +333,11 @@ const BatchImport: React.FC = () => {
           { name: 'SIMType', value: sim.type, valueType: 'string' },
           ...(sim.profileType ? [{ name: 'ProfileType', value: sim.profileType, valueType: 'string' } as any] : []),
           { name: 'BatchId', value: values.batchId, valueType: 'string' },
+          ...(sim.pin ? [{ name: 'PIN', value: sim.pin, valueType: 'string' } as any] : []),
+          ...(sim.puk1 ? [{ name: 'PUK1', value: sim.puk1, valueType: 'string' } as any] : []),
+          ...(sim.puk2 ? [{ name: 'PUK2', value: sim.puk2, valueType: 'string' } as any] : []),
+          ...(sim.esimActCode ? [{ name: 'ESIM_ACT_CODE', value: sim.esimActCode, valueType: 'string' } as any] : []),
+          ...(sim.marketplace ? [{ name: 'Marketplace', value: sim.marketplace, valueType: 'string' } as any] : []),
         ],
       })),
     };
