@@ -17,6 +17,7 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useKeycloak } from '../../contexts/KeycloakContext';
+import { formatDateTime } from '../../utils/format';
 
 const { Title, Text } = Typography;
 
@@ -138,9 +139,9 @@ const UserProfile: React.FC = () => {
               </Descriptions.Item>
 
               <Descriptions.Item label="Auth Time">
-                {keycloak?.authServerUrl ? (
+                {keycloak?.tokenParsed?.iat || keycloak?.tokenParsed?.auth_time ? (
                   <Text>
-                    <ClockCircleOutlined /> {new Date(keycloak.timeSkew || 0).toLocaleString()}
+                    <ClockCircleOutlined /> {formatDateTime(new Date(((keycloak?.tokenParsed?.auth_time || keycloak?.tokenParsed?.iat) as number) * 1000).toISOString())}
                   </Text>
                 ) : '-'}
               </Descriptions.Item>

@@ -47,6 +47,8 @@ import {
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { formatDateTime } from '../../utils/format';
+import { getResourceStatusColor } from '../../utils/status';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -273,28 +275,7 @@ const SimResourceDetail: React.FC = () => {
       (c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase()
     )?.value;
 
-  const getStatusColor = (status?: string | SimStatus) => {
-    const s = String(status || '').toLowerCase();
-    switch (s) {
-      // New ResourceStatus values
-      case 'available': return 'green';
-      case 'reserved': return 'gold';
-      case 'inuse': return 'blue';
-      case 'disposed': return 'default';
-      case 'standby': return 'cyan';
-      case 'suspended': return 'orange';
-      case 'alarm': return 'red';
-      case 'completed': return 'purple';
-      case 'cancelled': return 'default';
-      case 'unknown': return 'default';
-      // Legacy values fallback
-      case 'allocated': return 'blue';
-      case 'active': return 'cyan';
-      case 'terminated': return 'red';
-      case 'retired': return 'default';
-      default: return 'default';
-    }
-  };
+  const getStatusColor = (status?: string | SimStatus) => getResourceStatusColor(String(status));
 
   const getDisplayStatus = () => (sim as any).resourceStatus || '-';
 
@@ -316,8 +297,7 @@ const SimResourceDetail: React.FC = () => {
     return p?.name || p?.id || '-';
   };
 
-  const formatDate = (val?: string) =>
-    val ? new Date(val).toLocaleString() : '-';
+  const formatDate = (val?: string) => formatDateTime(val);
 
   const getAvailableActions = () => {
     const actions = [] as any[];
@@ -834,9 +814,7 @@ const SimResourceDetail: React.FC = () => {
                         type="secondary"
                         style={{ fontSize: 12 }}
                       >
-                        {sim.createdDate
-                          ? new Date(sim.createdDate).toLocaleString()
-                          : ''}
+                        {formatDateTime(sim.createdDate)}
                       </Typography.Text>
                     </>
                   ),

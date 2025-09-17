@@ -85,6 +85,26 @@ src/
 - **Internationalization**: i18next + react-i18next (runtime loading from `public/locales`)
 - **Translation Automation**: OpenAI-powered `translate.js` + GitHub Actions workflow
 
+## 🧰 Shared Utilities & Preferences
+
+The app centralizes common formatting and preference logic to ensure consistency:
+
+- **Date Formatting** (`src/utils/format.ts`)
+  - `formatDateTime(iso?: string)` renders datetimes according to the user's preference.
+  - Supported formats via preference: `YYYY-MM-DD`, `DD.MM.YYYY`, `MM/DD/YYYY` (default: `YYYY-MM-DD`).
+
+- **Status Colors** (`src/utils/status.ts`)
+  - `getResourceStatusColor(status)` maps SIM resource status/state to Ant Design Tag colors.
+  - `getOrderStatusColor(status)` maps SIM order status to colors.
+
+- **Preferences** (`src/utils/prefs.ts`)
+  - Keys: `pref.sort.resources`, `pref.sort.orders`, `pref.date.format`.
+  - Helpers: `getResourceSortPref()` → `-createdDate`, `getOrderSortPref()` → `-orderDate`, `getDateFormatPref()`.
+
+- **Settings Drawer**
+  - Accessible from the header; lets you adjust language, compact mode, date format, and default sort.
+  - Preferences persist in localStorage and are used across lists/details.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -179,6 +199,20 @@ Bulk (optional, Swagger dependent):
 
 Statistics: computed on client by paging `/resource` (no dedicated endpoint assumed)
 
+### Query Mapping & Compatibility
+
+To simplify UI usage yet stay TMF-compliant, `api.service.ts` applies the following mappings when listing resources:
+
+- __Default sorting__: `-createdDate` for resources and `-orderDate` for orders if `sort` is not provided.
+- __Status normalization__: merges `status` and `resourceStatus` into a single `resourceStatus` query. Values are normalized to backend expectations (e.g., `inuse` → `inUse`).
+- __Type filter__: the UI may send `@type` (e.g., `LogicalResource`, `PhysicalResource`); it is passed through to the API.
+- __Characteristic filters__:
+  - `batchId` → `resourceCharacteristic.name=BatchId` + `resourceCharacteristic.value={value}` (repeating allowed)
+  - `imsi` → `resourceCharacteristic.name=IMSI` + `resourceCharacteristic.value={value}`
+  - `iccid` → `resourceCharacteristic.name=ICCID` + `resourceCharacteristic.value={value}`
+- __Allocation filters__ (relatedParty):
+  - `allocation{Distributor|Representative|Customer}` → `relatedParty.role={Role}` + `relatedParty.name={value}`
+
 ## 🌐 Internationalization (i18n)
 
 - Runtime locales under `public/locales/{en,tr,de,fr}/translation.json`
@@ -225,6 +259,10 @@ Statistics: computed on client by paging `/resource` (no dedicated endpoint assu
 2. **Track Orders**: Real-time order status tracking
 3. **Order Details**: Comprehensive order information
 4. **Cancel Orders**: Administrative order cancellation
+5. **Create Similar Order**: Deep-link to `GET /sim-orders/create` with query params
+   - `st` (search type): one of `iccid`, `imsi`, `msisdn`
+   - `q` (query): the initial search term
+   - Behavior: these prefill the search type and term on the Create Order page, but do not auto-open the SIM search modal or auto-run the search; press "Add SIM" and then search.
 
 ### 3. Dashboard & Analytics
 1. **Statistics Overview**: Real-time inventory statistics
@@ -421,8 +459,136 @@ For technical support and questions:
 - **Issues**: Use the issue tracker for bugs and feature requests
 - **Development**: Contact the development team
 
+## Kullanım Rehberi (Usage Guide)
+
+This section explains, step-by-step, how to use each screen in the app. It is written for first-time users.
+
+### Global UI & Conventions
+- __Header actions__
+  - Settings: opens the preferences drawer (language, compact mode, date format, default sort for lists).
+  - Language: UI text follows the selected language; translations are loaded at runtime.
+- __Buttons & icons__
+  - Search: a magnifier icon indicates a searchable field; press Enter to search.
+  - Filter: opens contextual filters.
+  - Refresh: reloads data for the current list or dashboard card.
+  - Export CSV: downloads visible data as CSV.
+  - Plus/Add: add a new item or open a selection modal.
+  - More actions (three dots): opens a menu of item-specific actions.
+- __Tags & colors__ (status/state)
+  - SIM status/state and Order status are shown as colored tags. Colors are consistent across the app (e.g., Available = green, Reserved = gold, In use = blue, Suspended = orange, Terminated/Failed = red, Cancelled/Disposed = default grey).
+- __Dates__
+  - All dates/times follow your chosen format in Settings (default: YYYY-MM-DD HH:mm).
+
+### Dashboard
+- __What you see__
+  - Statistics cards: total counts and breakdowns.
+  - Recent SIMs table and recent Orders table.
+- __How to use__
+  - Click a SIM ICCID to open its detail page.
+  - Click an Order ID to open its detail page.
+  - Use Refresh on the section to update data.
+  - Status and State are color-tagged for quick scanning.
+
+### SIM Resources — List
+- __Where__: `SIM Resources` menu.
+- __Main actions__
+  - Search by ICCID. Type and press Enter.
+  - Filter by Status/State, Type (Physical vs eSIM), Batch, and more (depending on configuration).
+  - Sort uses your default preference; you can change column sorting from headers.
+  - Export CSV of the currently listed items.
+- __Row actions__ (More actions menu)
+  - Activate, Suspend, Terminate, Release, Retire. Delete may be available to admins.
+- __Tips__
+  - ICCID is clickable to navigate to detail.
+  - Created date uses your preferred date format.
+
+### SIM Resources — Detail
+- __What you see__
+  - Summary: status/state tags, key identifiers (ICCID/IMSI), created date.
+  - Characteristics: ICCID, IMSI, SIM Type, Profile Type, BatchId, and other attributes.
+  - Allocation: Distributor, Representative, Customer party links when available.
+  - Notes and relationships.
+- __How to use__
+  - Use action buttons/menus to change lifecycle (Activate/Suspend/Terminate/Release/Retire) depending on current state.
+  - Review characteristics and copy identifiers as needed.
+
+### SIM Resources — Batch Import
+- __Where__: from SIM Resources, look for “Batch Import” (if enabled).
+- __How to use__
+  - Upload a CSV with required columns (ICCID, IMSI, SIMType, etc.).
+  - Preview and validate records.
+  - Start import and review success/failure counts.
+
+### Orders — List
+- __Where__: `Orders` menu.
+- __Main actions__
+  - Filter by Status (multi-select). Use Refresh to reload.
+  - Export CSV of the listed orders.
+  - Order ID is a blue link to detail.
+  - Row actions: View. Pending/Acknowledged orders may show Cancel for admins.
+- __Notes__
+  - Date range filter may be disabled depending on backend capabilities.
+  - Default sort is by newest order date first.
+
+### Orders — Create (Create New Order)
+- __How to get here__
+  - Click “Create Order” on the Orders list, or use a “Create Similar Order” link (deep link).
+- __Steps__
+  1) Click “Add SIM” to open the SIM search modal.
+  2) Pick search type (ICCID/IMSI/MSISDN), enter a term, press Enter or the Search button.
+  3) From results, click “Add” to include SIM(s) in the order.
+  4) For each order item, set Action (e.g., Activate, Suspend, Terminate) and Quantity.
+  5) Optionally set Priority, Requested Start/Completion dates, Description, and Notes.
+  6) Click “Create Order”.
+- __Deep link behavior__ (Create Similar Order)
+  - You can open the create page with pre-filled search via query parameters: `?st=iccid|imsi|msisdn&q=<term>`.
+  - This pre-fills search type and term; open the modal and run the search to add SIMs.
+
+### Orders — Detail
+- __What you see__
+  - Order header with status tag, dates (order, expected/actual completion), priority.
+  - Order items: each with action, linked resource, and state.
+  - Notes and related parties if provided.
+- __Actions__
+  - Pending/Acknowledged orders may be cancellable (admin role required).
+
+### Reports
+- __What you see__
+  - Totals, breakdown by type/batch/state, recent activity (last 7 days), and distribution bars.
+- __How to use__
+  - Choose a date range and batch (if applicable), then apply filters.
+  - Export or read insights from the charts and lists.
+
+### User Profile
+- __What you see__
+  - User info from Keycloak (name, email), roles, and session details.
+  - Auth time and session state.
+- __Why it matters__
+  - Helps verify you have the correct roles (e.g., `sim_admin` vs `sim_user`).
+
+### Settings Drawer (Preferences)
+- __What you can change__
+  - Language.
+  - Compact mode (denser tables and spacing).
+  - Date format for all displayed timestamps.
+  - Default sort for Resources and Orders lists.
+- __Persistence__
+  - Preferences are saved in your browser and used throughout the app.
+
+### CSV Export
+- __Where__
+  - Orders list, SIM Resources list, and other pages with an “Export CSV” button.
+- __What you get__
+  - A CSV reflecting the current list and visible fields (exact fields may vary by page).
+
+### Permissions & Roles
+- __sim_admin__
+  - Full access, including destructive operations (Terminate/Delete) and administrative actions (Cancel order).
+- __sim_user__
+  - Standard usage: create orders, view details, non-destructive actions according to policy.
+
 ---
 
 **Version**: 1.0.0  
-**Last Updated**: 2025-09-16  
+**Last Updated**: 2025-09-17  
 **Minimum Node Version**: 16.0.0

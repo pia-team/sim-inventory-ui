@@ -13,6 +13,8 @@ import { SimOrder } from '../../types/sim.types';
 import { useTranslation } from 'react-i18next';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useKeycloak } from '../../contexts/KeycloakContext';
+import { formatDateTime } from '../../utils/format';
+import { getResourceStatusColor, getOrderStatusColor } from '../../utils/status';
 
 const { Title } = Typography;
 
@@ -127,23 +129,7 @@ const Dashboard: React.FC = () => {
       render: (_: any, record: any) => {
         const raw = record?.resourceStatus || record?.status || '';
         const s = String(raw).toLowerCase();
-        const map: Record<string, string> = {
-          available: 'green',
-          reserved: 'gold',
-          inuse: 'blue',
-          disposed: 'default',
-          standby: 'cyan',
-          suspended: 'orange',
-          alarm: 'red',
-          completed: 'green',
-          cancelled: 'default',
-          unknown: 'default',
-          allocated: 'blue',
-          active: 'cyan',
-          terminated: 'red',
-          retired: 'default',
-        };
-        const color = map[s] || 'default';
+        const color = getResourceStatusColor(s);
         const key = s === 'inuse' ? 'inUse' : raw || '';
         const label = key ? t(`sim.statusValues.${key}`, { defaultValue: String(raw || '-') }) : '-';
         return (
@@ -157,20 +143,7 @@ const Dashboard: React.FC = () => {
       key: 'state',
       render: (_: any, record: any) => {
         const state = String(getChar(record, 'RESOURCE_STATE') || '').toLowerCase();
-        const map: Record<string, string> = {
-          available: 'green',
-          reserved: 'gold',
-          standby: 'cyan',
-          suspended: 'orange',
-          alarm: 'red',
-          completed: 'green',
-          cancelled: 'default',
-          unknown: 'default',
-          active: 'cyan',
-          terminated: 'red',
-          retired: 'default',
-        };
-        const color = map[state] || 'default';
+        const color = getResourceStatusColor(state);
         return (
           <Tag color={color}>{state || '-'}</Tag>
         );
@@ -180,27 +153,12 @@ const Dashboard: React.FC = () => {
       title: t('sim.created'),
       dataIndex: 'createdDate',
       key: 'createdDate',
-      render: (_: any, record: any) => record?.createdDate ? new Date(record.createdDate).toLocaleString() : '-',
+      render: (_: any, record: any) => record?.createdDate ? formatDateTime(record.createdDate) : '-',
     },
   ];
 
   const getOrderDisplayState = (order: SimOrder) => (order.status as any) || (order as any).state || 'Pending';
-  const getOrderStatusColor = (status: string) => {
-    const s = String(status || '').toLowerCase();
-    const map: Record<string, string> = {
-      pending: 'blue',
-      inprogress: 'orange',
-      'in progress': 'orange',
-      acknowledged: 'gold',
-      completed: 'green',
-      failed: 'red',
-      cancelled: 'default',
-      partial: 'purple',
-      rejected: 'red',
-      held: 'volcano',
-    };
-    return map[s] || 'default';
-  };
+  // use getOrderStatusColor from utils/status
 
   const orderColumns = [
     {
@@ -240,7 +198,7 @@ const Dashboard: React.FC = () => {
       title: t('order.orderDate'),
       dataIndex: 'orderDate',
       key: 'orderDate',
-      render: (date: string) => new Date(date).toLocaleString(),
+      render: (date: string) => formatDateTime(date),
     },
   ];
 

@@ -28,6 +28,8 @@ import { SimOrder, OrderStatus, LifecycleAction } from '../../types/sim.types';
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { formatDateTime } from '../../utils/format';
+import { getOrderStatusColor, getResourceStatusColor } from '../../utils/status';
 
 const { Title, Text } = Typography;
 
@@ -82,22 +84,7 @@ const SimOrderDetail: React.FC = () => {
 
   const order = response.data;
 
-  const getStatusColor = (status: string | OrderStatus) => {
-    const s = String(status || '').toLowerCase();
-    const map: Record<string, string> = {
-      pending: 'blue',
-      inprogress: 'orange',
-      'in progress': 'orange',
-      acknowledged: 'gold',
-      completed: 'green',
-      failed: 'red',
-      cancelled: 'default',
-      partial: 'purple',
-      rejected: 'red',
-      held: 'volcano',
-    };
-    return map[s] || 'default';
-  };
+  const getStatusColor = (status: string | OrderStatus) => getOrderStatusColor(String(status));
 
   const getDisplayState = (order: SimOrder) => (order.status as any) || (order as any).state || 'Pending';
   const isPending = (order: SimOrder) => {
@@ -114,26 +101,7 @@ const SimOrderDetail: React.FC = () => {
     return colors[priority as keyof typeof colors] || 'default';
   };
 
-  const getSimStatusColor = (status?: string) => {
-    const s = String(status || '').toLowerCase();
-    switch (s) {
-      // New ResourceStatus values
-      case 'available': return 'green';
-      case 'reserved': return 'gold';
-      case 'standby': return 'cyan';
-      case 'suspended': return 'orange';
-      case 'alarm': return 'red';
-      case 'completed': return 'purple';
-      case 'cancelled': return 'default';
-      case 'unknown': return 'default';
-      // Legacy values fallback
-      case 'allocated': return 'blue';
-      case 'active': return 'cyan';
-      case 'terminated': return 'red';
-      case 'retired': return 'default';
-      default: return 'default';
-    }
-  };
+  const getSimStatusColor = (status?: string) => getResourceStatusColor(status);
 
   const getChar = (obj: any, key: string) =>
     obj?.resourceCharacteristic?.find((c: any) => String(c?.name || '').toLowerCase() === key.toLowerCase())?.value;
@@ -234,7 +202,7 @@ const SimOrderDetail: React.FC = () => {
         <>
           <div><strong>Order Created</strong></div>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {new Date(order.orderDate).toLocaleString()}
+            {formatDateTime(order.orderDate)}
           </Text>
         </>
       ),
@@ -245,7 +213,7 @@ const SimOrderDetail: React.FC = () => {
         <>
           <div><strong>{getDisplayState(order) as string}</strong></div>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {new Date(order.completionDate).toLocaleString()}
+            {formatDateTime(order.completionDate)}
           </Text>
         </>
       ),
@@ -308,23 +276,23 @@ const SimOrderDetail: React.FC = () => {
                 {order.orderItem?.length || 0}
               </Descriptions.Item>
               <Descriptions.Item label={t('order.orderDate')}>
-                {new Date(order.orderDate).toLocaleString()}
+                {formatDateTime(order.orderDate)}
               </Descriptions.Item>
               <Descriptions.Item label={t('order.expectedCompletion')}>
                 {order.expectedCompletionDate 
-                  ? new Date(order.expectedCompletionDate).toLocaleString() 
+                  ? formatDateTime(order.expectedCompletionDate)
                   : '-'
                 }
               </Descriptions.Item>
               <Descriptions.Item label={t('order.requestedStart')}>
                 {order.requestedStartDate 
-                  ? new Date(order.requestedStartDate).toLocaleString() 
+                  ? formatDateTime(order.requestedStartDate)
                   : '-'
                 }
               </Descriptions.Item>
               <Descriptions.Item label={t('order.completionDate')}>
                 {order.completionDate 
-                  ? new Date(order.completionDate).toLocaleString() 
+                  ? formatDateTime(order.completionDate)
                   : '-'
                 }
               </Descriptions.Item>
@@ -354,7 +322,7 @@ const SimOrderDetail: React.FC = () => {
                   <div style={{ marginBottom: 8 }}>
                     <Text strong>{note.author || 'System'}</Text>
                     <Text type="secondary" style={{ marginLeft: 8 }}>
-                      {note.date ? new Date(note.date).toLocaleString() : ''}
+                      {formatDateTime(note.date)}
                     </Text>
                   </div>
                   <div style={{ 

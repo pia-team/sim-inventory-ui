@@ -26,6 +26,7 @@ import {
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import { useTranslation } from 'react-i18next';
 import ThemeSettingsDrawer from '../common/ThemeSettingsDrawer';
+import UserSettingsDrawer from '../common/UserSettingsDrawer';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -33,6 +34,7 @@ const { Text } = Typography;
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { userInfo, logout, hasRole } = useKeycloak();
@@ -108,9 +110,7 @@ const MainLayout: React.FC = () => {
       key: 'settings',
       icon: <SettingOutlined />,
       label: t('nav.settings'),
-      onClick: () => {
-        // Navigate to settings or show settings modal
-      },
+      onClick: () => setSettingsOpen(true),
     },
     {
       type: 'divider' as const,
@@ -130,7 +130,11 @@ const MainLayout: React.FC = () => {
   const getSelectedKeys = () => {
     const path = location.pathname;
     if (path.startsWith('/sim-resources')) {
-      if (path === '/sim-resources/create' || path === '/sim-resources/batch-import') {
+      if (
+        path === '/sim-resources/create' ||
+        path === '/sim-resources/batch-import' ||
+        path === '/sim-resources/bulk-template'
+      ) {
         return [path];
       }
       return ['/sim-resources'];
@@ -300,6 +304,7 @@ const MainLayout: React.FC = () => {
         </Content>
 
         <ThemeSettingsDrawer open={themeOpen} onClose={() => setThemeOpen(false)} />
+        <UserSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       </Layout>
     </Layout>
   );

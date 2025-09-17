@@ -14,8 +14,8 @@ import {
   Col,
   DatePicker,
   Typography,
-  Tooltip,
 } from 'antd';
+
 import {
   SearchOutlined,
   PlusOutlined,
@@ -24,6 +24,7 @@ import {
   FilterOutlined,
   EyeOutlined,
   StopOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +34,9 @@ import { SimOrder, OrderStatus } from '../../types/sim.types';
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { formatDateTime } from '../../utils/format';
+import { getOrderStatusColor } from '../../utils/status';
+import { getOrderSortPref } from '../../utils/prefs';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -44,6 +48,9 @@ const SimOrderList: React.FC = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
+  // Preferences (from Settings)
+  const preferredOrderSort = getOrderSortPref();
+
   const [searchParams, setSearchParams] = useState<{
     status?: string[];
     limit?: number;
@@ -52,7 +59,7 @@ const SimOrderList: React.FC = () => {
   }>({
     limit: 20,
     offset: 0,
-    sort: '-orderDate',
+    sort: preferredOrderSort,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -132,22 +139,7 @@ const SimOrderList: React.FC = () => {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    const s = String(status || '').toLowerCase();
-    const map: Record<string, string> = {
-      pending: 'blue',
-      inprogress: 'orange',
-      'in progress': 'orange',
-      acknowledged: 'gold',
-      completed: 'green',
-      failed: 'red',
-      cancelled: 'default',
-      partial: 'purple',
-      rejected: 'red',
-      held: 'volcano',
-    };
-    return map[s] || 'default';
-  };
+  const getStatusColor = (status: string) => getOrderStatusColor(status);
 
   const getDisplayState = (order: SimOrder) => (order.status as any) || (order as any).state || 'Pending';
   const isPending = (order: SimOrder) => {
@@ -182,26 +174,19 @@ const SimOrderList: React.FC = () => {
       title: t('order.orderId'),
       dataIndex: 'id',
       key: 'id',
-      width: 160,
+      width: 200,
       fixed: 'left' as const,
       onCell: () => ({ style: { whiteSpace: 'nowrap' } }),
       ellipsis: true,
-      render: (id: string) => {
-        const shortId = id ? (id.length > 12 ? `${id.slice(0, 8)}…${id.slice(-4)}` : id) : '-';
-        return (
-          <Tooltip title={id} placement="topLeft">
-            <Button
-              type="link"
-              onClick={() => navigate(`/sim-orders/${id}`)}
-              style={{ padding: 0 }}
-            >
-              <Typography.Text code copyable={{ text: id }} style={{ fontFamily: 'monospace'}}>
-                {shortId}
-              </Typography.Text>
-            </Button>
-          </Tooltip>
-        );
-      },
+      render: (id: string) => (
+        <Button
+          type="link"
+          onClick={() => navigate(`/sim-orders/${id}`)}
+          style={{ padding: 0, fontFamily: 'monospace' }}
+        >
+          {id}
+        </Button>
+      ),
     },
     {
       title: t('order.status'),
@@ -267,7 +252,7 @@ const SimOrderList: React.FC = () => {
       key: 'orderDate',
       width: 160,
       align: 'center' as const,
-      render: (date: string) => new Date(date).toLocaleString(),
+      render: (date: string) => formatDateTime(date),
     },
     {
       title: t('order.expectedCompletion'),
@@ -275,7 +260,7 @@ const SimOrderList: React.FC = () => {
       key: 'expectedCompletionDate',
       width: 160,
       align: 'center' as const,
-      render: (date: string) => date ? new Date(date).toLocaleString() : '-',
+      render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
       title: t('common.actions'),
@@ -295,7 +280,13 @@ const SimOrderList: React.FC = () => {
             trigger={['click']}
             placement="bottomRight"
           >
-            <Button type="text" icon={<EyeOutlined />} size="small" />
+            <Button
+              type="default"
+              shape="circle"
+              icon={<MoreOutlined />}
+              size="middle"
+              title="Actions"
+            />
           </Dropdown>
         );
       },

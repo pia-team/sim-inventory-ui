@@ -26,6 +26,7 @@ import apiService from '../../services/api.service';
 import { SimType } from '../../types/sim.types';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { formatDateTime } from '../../utils/format';
 
 // Helper to read a characteristic value (e.g., IMSI, BatchId)
 const getChar = (sim: any, key: string) =>
@@ -38,7 +39,15 @@ const { RangePicker } = DatePicker;
 const Reports: React.FC = () => {
   const [dateRange, setDateRange] = useState<[any, any] | null>(null);
   const [selectedBatch, setSelectedBatch] = useState<string | undefined>();
+  // Applied filter states (updated only when user clicks "Apply Filters")
+  const [appliedDateRange, setAppliedDateRange] = useState<[any, any] | null>(null);
+  const [appliedBatch, setAppliedBatch] = useState<string | undefined>();
   const { t } = useTranslation();
+
+  const handleApplyFilters = () => {
+    setAppliedDateRange(dateRange);
+    setAppliedBatch(selectedBatch);
+  };
 
   // Fetch statistics
   const { data: statsResponse, isLoading: statsLoading, refetch } = useQuery(
@@ -65,8 +74,8 @@ const Reports: React.FC = () => {
 
   // Apply basic filters
   const toDate = (d: any) => (d && typeof d?.toDate === 'function') ? d.toDate() : (d ? new Date(d) : undefined);
-  const start = dateRange?.[0] ? toDate(dateRange[0]) : undefined;
-  const end = dateRange?.[1] ? toDate(dateRange[1]) : undefined;
+  const start = appliedDateRange?.[0] ? toDate(appliedDateRange[0]) : undefined;
+  const end = appliedDateRange?.[1] ? toDate(appliedDateRange[1]) : undefined;
   const inRange = (dt: any) => {
     const x = dt ? new Date(dt) : undefined;
     if (!x) return true;
@@ -136,7 +145,7 @@ const Reports: React.FC = () => {
   ];
 
   const batchAll = Object.entries(stats?.byBatch || {}).map(([batchId, count]) => ({ key: batchId, batchId, count }));
-  const batchData = selectedBatch ? batchAll.filter(b => b.batchId === selectedBatch) : batchAll;
+  const batchData = appliedBatch ? batchAll.filter(b => b.batchId === appliedBatch) : batchAll;
 
   const exportData = recentSims.map((sim: any) => ({
     ICCID: getChar(sim, 'ICCID') || sim.name || sim.id,
@@ -206,6 +215,7 @@ const Reports: React.FC = () => {
             <Button
               icon={<FilterOutlined />}
               style={{ width: '100%' }}
+              onClick={handleApplyFilters}
             >
               {t('reports.applyFilters')}
             </Button>
@@ -359,10 +369,7 @@ const Reports: React.FC = () => {
                         {String(item.count)}
                       </div>
                       <div style={{ fontSize: 12, opacity: 0.75 }}>
-                        {new Date(item.date).toLocaleDateString(undefined, { 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
+                        {formatDateTime(item.date).split(' ')[0]}
                       </div>
                     </div>
                   </Col>

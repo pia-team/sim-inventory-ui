@@ -38,10 +38,13 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { CSVLink } from 'react-csv';
 import apiService from '../../services/api.service';
-import { SimResource, SimStatus, LifecycleAction, SimResourceSearchCriteria, RESOURCE_STATUS_VALUES } from '../../types/sim.types';
+import { SimResource, LifecycleAction, SimResourceSearchCriteria, RESOURCE_STATUS_VALUES } from '../../types/sim.types';
 import { useKeycloak } from '../../contexts/KeycloakContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useTranslation } from 'react-i18next';
+import { formatDateTime } from '../../utils/format';
+import { getResourceStatusColor } from '../../utils/status';
+import { getResourceSortPref } from '../../utils/prefs';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -55,10 +58,13 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
+  // Preferences from Settings Drawer (with sensible defaults)
+  const preferredSort = getResourceSortPref();
+
   const [searchCriteria, setSearchCriteria] = useState<SimResourceSearchCriteria>({
     limit: 20,
     offset: 0,
-    sort: '-createdDate',
+    sort: preferredSort,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -244,30 +250,6 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     });
   };
 
-  const getStatusColor = (status?: string | SimStatus, record?: any) => {
-    const stateChar = record ? String(getChar(record, 'RESOURCE_STATE') || '').toLowerCase() : '';
-    const s = stateChar || String(status || '').toLowerCase();
-    switch (s) {
-      // New ResourceStatus values
-      case 'available': return 'green';
-      case 'reserved': return 'gold';
-      case 'inuse': return 'blue';
-      case 'disposed': return 'default';
-      case 'standby': return 'cyan';
-      case 'suspended': return 'orange';
-      case 'alarm': return 'red';
-      case 'completed': return 'green';
-      case 'cancelled': return 'default';
-      case 'unknown': return 'default';
-      // Legacy values fallback
-      case 'allocated': return 'blue';
-      case 'active': return 'cyan';
-      case 'terminated': return 'red';
-      case 'retired': return 'default';
-      default: return 'default';
-    }
-  };
-
   const formatStatusLabel = (val?: string) => {
     const s = String(val || '').toLowerCase();
     if (s === 'inuse') return 'In use';
@@ -427,7 +409,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
         const s = record?.resourceStatus || record?.status;
         const key = String(s || '').toLowerCase() === 'inuse' ? 'inUse' : String(s || '');
         return (
-          <Tag color={getStatusColor(s as any)}>
+          <Tag color={getResourceStatusColor(s as any)}>
             {t(`sim.statusValues.${key}`, { defaultValue: formatStatusLabel(s as string) })}
           </Tag>
         );
@@ -441,7 +423,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       render: (_: any, record: any) => {
         const state = getChar(record, 'RESOURCE_STATE');
         return (
-          <Tag color={getStatusColor(state as any)}>
+          <Tag color={getResourceStatusColor(state as any)}>
             {state || '-'}
           </Tag>
         );
@@ -459,7 +441,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       dataIndex: 'createdDate',
       key: 'createdDate',
       width: 180,
-      render: (_: any, record: any) => record?.createdDate ? new Date(record.createdDate).toLocaleString() : '-',
+      render: (_: any, record: any) => formatDateTime(record?.createdDate),
     },
     {
       title: t('common.actions'),
@@ -614,7 +596,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                 >
                   {RESOURCE_STATUS_VALUES.map(status => (
                     <Option key={status} value={status}>
-                      <Tag color={getStatusColor(status)}>{formatStatusLabel(status)}</Tag>
+                      <Tag color={getResourceStatusColor(status)}>{formatStatusLabel(status)}</Tag>
                     </Option>
                   ))}
                 </Select>
@@ -625,7 +607,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
                   placeholder={t('filters.type')}
                   style={{ width: '100%' }}
                   mode="multiple"
-                  onChange={(value) => handleFilterChange('type', value.length ? value : undefined)}
+                  onChange={(value) => handleFilterChange('@type' as any, value.length ? value : undefined)}
                   allowClear
                 >
                   <Option key="LogicalResource" value="LogicalResource">LogicalResource</Option>
