@@ -459,7 +459,7 @@ For technical support and questions:
 - **Issues**: Use the issue tracker for bugs and feature requests
 - **Development**: Contact the development team
 
-## Kullanım Rehberi (Usage Guide)
+## Usage Guide
 
 This section explains, step-by-step, how to use each screen in the app. It is written for first-time users.
 
