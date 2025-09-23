@@ -26,3 +26,4 @@ Dockerfile
 **/.DS_Store
 coverage
 .vscode
+!nginx/default.conf
