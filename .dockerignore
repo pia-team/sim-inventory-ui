@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Build output
+build
+
+dist
+.tmp
+
+# VCS
+.git
+.gitignore
+
+# Env & local config
+.env
+.env.*
+*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+Dockerfile
+**/.DS_Store
+coverage
+.vscode
