@@ -28,7 +28,7 @@ import {
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import { CSVLink } from 'react-csv';
+import { CSVLink as CSVLinkComponent } from 'react-csv';
 import apiService from '../../services/api.service';
 import { SimOrder, OrderStatus } from '../../types/sim.types';
 import { useKeycloak } from '../../contexts/KeycloakContext';
@@ -41,6 +41,9 @@ import { getOrderSortPref } from '../../utils/prefs';
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { Title } = Typography;
+
+// Cast to any to avoid TS2786 from outdated react-csv types with React 18
+const CSVLink: any = CSVLinkComponent;
 
 const SimOrderList: React.FC = () => {
   const navigate = useNavigate();

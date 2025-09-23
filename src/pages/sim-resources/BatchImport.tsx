@@ -26,13 +26,16 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from 'react-query';
 import type { UploadFile, UploadProps } from 'antd';
-import { CSVLink } from 'react-csv';
+import { CSVLink as CSVLinkComponent } from 'react-csv';
 import apiService from '../../services/api.service';
 import { BatchSimImportRequest, BatchSimImportResponse, SimType, ProfileType, BulkResourceCreateRequest } from '../../types/sim.types';
 import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 const { Dragger } = Upload;
+
+// Cast to any to avoid TS2786 from outdated react-csv types with React 18
+const CSVLink: any = CSVLinkComponent;
 
 interface ParsedSim {
   iccid: string;

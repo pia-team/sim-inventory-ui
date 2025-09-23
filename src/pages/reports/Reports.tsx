@@ -21,7 +21,7 @@ import {
   FilterOutlined,
 } from '@ant-design/icons';
 import { useQuery } from 'react-query';
-import { CSVLink } from 'react-csv';
+import { CSVLink as CSVLinkComponent } from 'react-csv';
 import apiService from '../../services/api.service';
 import { SimType } from '../../types/sim.types';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -35,6 +35,9 @@ const getChar = (sim: any, key: string) =>
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+
+// Cast to any to avoid TS2786 from outdated react-csv types with React 18
+const CSVLink: any = CSVLinkComponent;
 
 const Reports: React.FC = () => {
   const [dateRange, setDateRange] = useState<[any, any] | null>(null);
