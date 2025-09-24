@@ -33,6 +33,7 @@ import { useForm } from 'antd/es/form/Form';
 import apiService from '../../services/api.service';
 import { CreateSimOrderRequest, SimResource, LifecycleAction } from '../../types/sim.types';
 import { getResourceStatusColor } from '../../utils/status';
+import { useTranslation } from 'react-i18next';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -51,6 +52,7 @@ const CreateSimOrder: React.FC = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [form] = useForm();
+  const { t } = useTranslation();
   
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [simSearchVisible, setSimSearchVisible] = useState(false);
@@ -110,15 +112,15 @@ const CreateSimOrder: React.FC = () => {
     {
       onSuccess: (response) => {
         if (response.success) {
-          message.success('Order created successfully');
+          message.success(t('messages.success', { defaultValue: 'Operation completed successfully.' }));
           queryClient.invalidateQueries('simOrders');
           navigate(`/sim-orders/${response.data?.id}`);
         } else {
-          message.error(response.error?.message || 'Failed to create order');
+          message.error(response.error?.message || t('app.error', { defaultValue: 'An error occurred.' }));
         }
       },
       onError: (error: any) => {
-        message.error(`Failed to create order: ${error.response?.data?.message || error.message}`);
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -134,17 +136,17 @@ const CreateSimOrder: React.FC = () => {
     const isDigits = /^\d+$/;
     if (searchType === 'iccid' && (!isDigits.test(term) || term.length < 10)) {
       // Allow partial but at least 10 digits to avoid huge scans
-      message.warning('Please enter at least 10 digits for ICCID');
+      message.warning(t('createOrder.validation.iccidDigits', { defaultValue: 'Please enter at least 10 digits for ICCID' }));
       setSearchResults([]);
       return;
     }
     if (searchType === 'imsi' && (!isDigits.test(term) || term.length < 6)) {
-      message.warning('Please enter at least 6 digits for IMSI');
+      message.warning(t('createOrder.validation.imsiDigits', { defaultValue: 'Please enter at least 6 digits for IMSI' }));
       setSearchResults([]);
       return;
     }
     if (searchType === 'msisdn' && (!isDigits.test(term) || term.length < 7)) {
-      message.warning('Please enter a valid MSISDN (min 7 digits)');
+      message.warning(t('createOrder.validation.msisdnDigits', { defaultValue: 'Please enter a valid MSISDN (min 7 digits)' }));
       setSearchResults([]);
       return;
     }
@@ -164,10 +166,10 @@ const CreateSimOrder: React.FC = () => {
         const list: SimResource[] = Array.isArray(raw) ? raw : (raw?.data || []);
         setSearchResults(list);
       } else {
-        message.error(response.error?.message || 'Failed to search SIMs');
+        message.error(response.error?.message || t('app.error', { defaultValue: 'An error occurred.' }));
       }
     } catch (error) {
-      message.error('Failed to search SIMs');
+      message.error(t('app.error', { defaultValue: 'An error occurred.' }));
     } finally {
       setSearchLoading(false);
     }
@@ -176,7 +178,7 @@ const CreateSimOrder: React.FC = () => {
   const addOrderItem = (sim: SimResource) => {
     const exists = orderItems.some(item => item.resourceId === sim.id);
     if (exists) {
-      message.warning('SIM already added to order');
+      message.warning(t('createOrder.alreadyAdded', { defaultValue: 'SIM already added to order' }));
       return;
     }
 
@@ -277,7 +279,7 @@ const CreateSimOrder: React.FC = () => {
     const actions = getAvailableActions(sim);
     if (actions.length === 0) {
       const statusRaw = (sim as any)?.resourceStatus || (sim as any)?.status || 'unknown';
-      return `Not eligible (status: ${String(statusRaw)})`;
+      return t('createOrder.notEligible', { status: String(statusRaw), defaultValue: `Not eligible (status: ${String(statusRaw)})` });
     }
     return null;
   };
@@ -437,17 +439,17 @@ const CreateSimOrder: React.FC = () => {
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate('/sim-orders')}
           >
-            Back
+            {t('common.back', { defaultValue: 'Back' })}
           </Button>
           <Title level={2} style={{ margin: 0 }}>
-            Create New Order
+            {t('order.createNew', { defaultValue: 'Create New Order' })}
           </Title>
         </Space>
       </div>
 
       <Row gutter={[24, 24]}>
         <Col xs={24} md={13} lg={10} xl={10} xxl={10}>
-          <Card title="Order Details">
+          <Card title={t('titles.orderInformation', { defaultValue: 'Order Details' })}>
             <Form
               form={form}
               layout="vertical"
@@ -456,25 +458,25 @@ const CreateSimOrder: React.FC = () => {
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    label="Priority"
+                    label={t('order.priority', { defaultValue: 'Priority' })}
                     name="priority"
                   >
-                    <Select placeholder="Select priority">
-                      <Option value="high">High</Option>
-                      <Option value="medium">Medium</Option>
-                      <Option value="low">Low</Option>
+                    <Select placeholder={t('order.priority', { defaultValue: 'Priority' })}>
+                      <Option value="high">{t('order.priorityHigh', { defaultValue: 'High' })}</Option>
+                      <Option value="medium">{t('order.priorityMedium', { defaultValue: 'Medium' })}</Option>
+                      <Option value="low">{t('order.priorityLow', { defaultValue: 'Low' })}</Option>
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    label="Requested Start Date"
+                    label={t('order.requestedStartDate', { defaultValue: 'Requested Start Date' })}
                     name="requestedStartDate"
                   >
                     <DatePicker
                       showTime
                       style={{ width: '100%' }}
-                      placeholder="Select start date"
+                      placeholder={t('order.requestedStartDate', { defaultValue: 'Requested Start Date' })}
                     />
                   </Form.Item>
                 </Col>
@@ -483,35 +485,35 @@ const CreateSimOrder: React.FC = () => {
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
-                    label="Requested Completion Date"
+                    label={t('order.requestedCompletionDate', { defaultValue: 'Requested Completion Date' })}
                     name="requestedCompletionDate"
                   >
                     <DatePicker
                       showTime
                       style={{ width: '100%' }}
-                      placeholder="Select completion date"
+                      placeholder={t('order.requestedCompletionDate', { defaultValue: 'Requested Completion Date' })}
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Form.Item
-                label="Description"
+                label={t('common.description', { defaultValue: 'Description' })}
                 name="description"
               >
                 <TextArea
                   rows={3}
-                  placeholder="Enter order description"
+                  placeholder={t('common.description', { defaultValue: 'Description' })}
                 />
               </Form.Item>
 
               <Form.Item
-                label="Notes"
+                label={t('titles.notes', { defaultValue: 'Notes' })}
                 name="notes"
               >
                 <TextArea
                   rows={3}
-                  placeholder="Enter any additional notes"
+                  placeholder={t('titles.notes', { defaultValue: 'Notes' })}
                 />
               </Form.Item>
             </Form>
@@ -520,7 +522,7 @@ const CreateSimOrder: React.FC = () => {
 
         <Col xs={24} md={11} lg={14} xl={14} xxl={14}>
           <Card
-            title="Order Summary"
+            title={t('order.summary', { defaultValue: 'Order Summary' })}
             extra={
               <Space>
                 <Button
@@ -529,14 +531,14 @@ const CreateSimOrder: React.FC = () => {
                   onClick={() => setOrderItems([])}
                   disabled={orderItems.length === 0}
                 >
-                  Clear All
+                  {t('actions.clearAll', { defaultValue: 'Clear All' })}
                 </Button>
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => setSimSearchVisible(true)}
                 >
-                  Add SIM
+                  {t('buttons.addSim', { defaultValue: 'Add SIM' })}
                 </Button>
               </Space>
             }
@@ -568,7 +570,7 @@ const CreateSimOrder: React.FC = () => {
             onClick={() => navigate('/sim-orders')}
             disabled={createMutation.isLoading}
           >
-            Cancel
+            {t('common.cancel', { defaultValue: 'Cancel' })}
           </Button>
           <Button
             type="primary"
@@ -577,14 +579,14 @@ const CreateSimOrder: React.FC = () => {
             loading={createMutation.isLoading}
             disabled={orderItems.length === 0}
           >
-            Create Order
+            {t('buttons.createOrder', { defaultValue: 'Create Order' })}
           </Button>
         </Space>
       </div>
 
       {/* SIM Search Modal */}
       <Modal
-        title="Search and Add SIMs"
+        title={t('order.searchAndAdd', { defaultValue: 'Search and Add SIMs' })}
         open={simSearchVisible}
         onCancel={() => setSimSearchVisible(false)}
         footer={null}
@@ -601,7 +603,7 @@ const CreateSimOrder: React.FC = () => {
             </Col>
             <Col flex="auto">
               <Input.Search
-                placeholder={`Search by ${searchType.toUpperCase()}`}
+                placeholder={searchType === 'iccid' ? t('placeholders.searchByIccid', { defaultValue: 'Search by ICCID' }) : (searchType === 'imsi' ? t('placeholders.searchByImsi', { defaultValue: 'Search by IMSI' }) : t('placeholders.searchOrders', { defaultValue: 'Search...' }))}
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); debouncedSearch(e.target.value); }}
                 onSearch={(v) => { setSearchTerm(v); searchSims(v); }}
@@ -625,13 +627,13 @@ const CreateSimOrder: React.FC = () => {
                   navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
                 }}
               >
-                Clear
+                {t('common.clear', { defaultValue: 'Clear' })}
               </Button>
             </Col>
           </Row>
         </div>
         <div style={{ marginBottom: 8, opacity: 0.7 }}>
-          {searchResults.length > 0 ? `${searchResults.length} result(s)` : 'Search for SIMs to add to order'}
+          {searchResults.length > 0 ? t('order.searchResultsCount', { count: searchResults.length, defaultValue: '{{count}} result(s)' }) : t('order.searchHint', { defaultValue: 'Search for SIMs to add to order' })}
         </div>
 
         <Table
@@ -643,7 +645,7 @@ const CreateSimOrder: React.FC = () => {
           size="small"
           scroll={{ x: 'max-content' }}
           tableLayout="fixed"
-          locale={{ emptyText: 'Search for SIMs to add to order' }}
+          locale={{ emptyText: t('order.searchHint', { defaultValue: 'Search for SIMs to add to order' }) }}
         />
       </Modal>
     </div>

@@ -98,12 +98,12 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     (id: string) => apiService.activateSimResource(id),
     {
       onSuccess: () => {
-        message.success('SIM activated successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries('simResources');
         queryClient.invalidateQueries('simStatistics');
       },
       onError: (error: any) => {
-        message.error(`Failed to activate SIM: ${error.response?.data?.message || error.message}`);
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -112,12 +112,12 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     ({ id, reason }: { id: string; reason?: string }) => apiService.suspendSimResource(id, reason),
     {
       onSuccess: () => {
-        message.success('SIM suspended successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries('simResources');
         queryClient.invalidateQueries('simStatistics');
       },
       onError: (error: any) => {
-        message.error(`Failed to suspend SIM: ${error.response?.data?.message || error.message}`);
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -126,12 +126,12 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     ({ id, reason }: { id: string; reason?: string }) => apiService.terminateSimResource(id, reason),
     {
       onSuccess: () => {
-        message.success('SIM terminated successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries('simResources');
         queryClient.invalidateQueries('simStatistics');
       },
       onError: (error: any) => {
-        message.error(`Failed to terminate SIM: ${error.response?.data?.message || error.message}`);
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -140,12 +140,12 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     (id: string) => apiService.deleteSimResource(id),
     {
       onSuccess: () => {
-        message.success('SIM deleted successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries('simResources');
         queryClient.invalidateQueries('simStatistics');
       },
       onError: (error: any) => {
-        message.error(`Failed to delete SIM: ${error.response?.data?.message || error.message}`);
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -154,12 +154,12 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     (id: string) => apiService.releaseSimResource(id),
     {
       onSuccess: () => {
-        message.success('SIM released successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries('simResources');
         queryClient.invalidateQueries('simStatistics');
       },
       onError: (error: any) => {
-        message.error(`Failed to release SIM: ${error.response?.data?.message || error.message}`);
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -168,12 +168,12 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
     ({ id, reason }: { id: string; reason?: string }) => apiService.retireSimResource(id, reason),
     {
       onSuccess: () => {
-        message.success('SIM retired successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries('simResources');
         queryClient.invalidateQueries('simStatistics');
       },
       onError: (error: any) => {
-        message.error(`Failed to retire SIM: ${error.response?.data?.message || error.message}`);
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -213,29 +213,29 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
       [LifecycleAction.ACTIVATE]: () => activateMutation.mutate(sim.id),
       [LifecycleAction.SUSPEND]: () => {
         Modal.confirm({
-          title: 'Suspend SIM',
-          content: 'Are you sure you want to suspend this SIM?',
+          title: t('actions.suspend', { defaultValue: 'Suspend' }),
+          content: t('messages.areYouSure', { defaultValue: 'Are you sure?' }),
           onOk: () => suspendMutation.mutate({ id: sim.id }),
         });
       },
       [LifecycleAction.TERMINATE]: () => {
         Modal.confirm({
-          title: 'Terminate SIM',
-          content: 'Are you sure you want to terminate this SIM? This action cannot be undone.',
+          title: t('actions.terminate', { defaultValue: 'Terminate' }),
+          content: t('messages.areYouSure', { defaultValue: 'Are you sure?' }),
           onOk: () => terminateMutation.mutate({ id: sim.id }),
         });
       },
       [LifecycleAction.RELEASE]: () => {
         Modal.confirm({
-          title: 'Release SIM',
-          content: 'This will release the SIM resource. Continue?',
+          title: t('actions.release', { defaultValue: 'Release' }),
+          content: t('messages.areYouSure', { defaultValue: 'Are you sure?' }),
           onOk: () => releaseMutation.mutate(sim.id),
         });
       },
       [LifecycleAction.RETIRE]: () => {
         Modal.confirm({
-          title: 'Retire SIM',
-          content: 'Are you sure you want to retire this SIM? This action cannot be undone.',
+          title: t('actions.retire', { defaultValue: 'Retire' }),
+          content: t('messages.areYouSure', { defaultValue: 'Are you sure?' }),
           onOk: () => retireMutation.mutate({ id: sim.id }),
         });
       },
@@ -455,7 +455,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
         const actions = getAvailableActions(record);
         const items: MenuProps['items'] = (actions.length ? actions : [{
           key: 'view',
-          label: 'View',
+          label: t('actions.view', { defaultValue: 'View' }),
           icon: <EyeOutlined />,
         }]).map((it: any) => ({ key: it.key, label: it.label, icon: it.icon, danger: it.danger }));
 
@@ -496,7 +496,7 @@ const SimResourceList: React.FC<SimResourceListProps> = () => {
               shape="circle"
               icon={<MoreOutlined />}
               size="middle"
-              title="Actions"
+              title={t('common.actions', { defaultValue: 'Actions' })}
             />
           </Dropdown>
         );

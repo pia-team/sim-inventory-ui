@@ -70,10 +70,12 @@ const UserSettingsDrawer: React.FC<Props> = ({ open, onClose }) => {
             <Col flex="140px"><Text>{t('settings.language', { defaultValue: 'Language' })}</Text></Col>
             <Col flex="auto">
               <Select value={i18n.language} onChange={handleLangChange} style={{ width: '100%' }}>
-                <Option value="en">English</Option>
-                <Option value="tr">Türkçe</Option>
-                <Option value="de">Deutsch</Option>
-                <Option value="fr">Français</Option>
+                <Option value="en">{t('lang.en', { defaultValue: 'English' })}</Option>
+                <Option value="tr">{t('lang.tr', { defaultValue: 'Turkish' })}</Option>
+                <Option value="de">{t('lang.de', { defaultValue: 'German' })}</Option>
+                <Option value="fr">{t('lang.fr', { defaultValue: 'French' })}</Option>
+                <Option value="ar">{t('lang.ar', { defaultValue: 'Arabic' })}</Option>
+                <Option value="zh">{t('lang.zh', { defaultValue: 'Chinese' })}</Option>
               </Select>
             </Col>
           </Row>

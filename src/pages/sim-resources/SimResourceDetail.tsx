@@ -10,7 +10,6 @@ import {
   Form,
   Input,
   Select,
-  Divider,
   message,
   Typography,
   Row,
@@ -31,8 +30,6 @@ import {
   HistoryOutlined,
   UnlockOutlined,
   RestOutlined,
-  MinusCircleOutlined,
-  PlusOutlined,
   EyeOutlined,
   EyeInvisibleOutlined,
   CopyOutlined,
@@ -104,15 +101,13 @@ const SimResourceDetail: React.FC = () => {
     () => apiService.assignSimToAccount(id!, assignMsisdn),
     {
       onSuccess: () => {
-        message.success('SIM assigned to account');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         setAssignModalVisible(false);
         setAssignMsisdn('');
       },
       onError: (error: any) => {
-        message.error(
-          error?.response?.data?.message || error.message || 'Failed to assign'
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error?.response?.data?.message || error.message}`);
       },
     }
   );
@@ -121,16 +116,12 @@ const SimResourceDetail: React.FC = () => {
     () => apiService.unassignSimResource(id!, unassignBehavior),
     {
       onSuccess: () => {
-        message.success(`SIM unassigned (${unassignBehavior})`);
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         setUnassignModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(
-          error?.response?.data?.message ||
-            error.message ||
-            'Failed to unassign'
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error?.response?.data?.message || error.message}`);
       },
     }
   );
@@ -140,14 +131,12 @@ const SimResourceDetail: React.FC = () => {
     (data: any) => apiService.updateSimResource(id!, data),
     {
       onSuccess: () => {
-        message.success('SIM resource updated successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         setEditModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(
-          `Failed to update SIM: ${error.response?.data?.message || error.message}`
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -157,15 +146,13 @@ const SimResourceDetail: React.FC = () => {
     () => apiService.activateSimResource(id!),
     {
       onSuccess: () => {
-        message.success('SIM activated successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         queryClient.invalidateQueries('simStatistics');
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(
-          `Failed to activate SIM: ${error.response?.data?.message || error.message}`
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -174,15 +161,13 @@ const SimResourceDetail: React.FC = () => {
     (reason?: string) => apiService.suspendSimResource(id!, reason),
     {
       onSuccess: () => {
-        message.success('SIM suspended successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         queryClient.invalidateQueries('simStatistics');
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(
-          `Failed to suspend SIM: ${error.response?.data?.message || error.message}`
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -191,15 +176,13 @@ const SimResourceDetail: React.FC = () => {
     (reason?: string) => apiService.terminateSimResource(id!, reason),
     {
       onSuccess: () => {
-        message.success('SIM terminated successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         queryClient.invalidateQueries('simStatistics');
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(
-          `Failed to terminate SIM: ${error.response?.data?.message || error.message}`
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -208,15 +191,13 @@ const SimResourceDetail: React.FC = () => {
     () => apiService.releaseSimResource(id!),
     {
       onSuccess: () => {
-        message.success('SIM released successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         queryClient.invalidateQueries('simStatistics');
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(
-          `Failed to release SIM: ${error.response?.data?.message || error.message}`
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
@@ -225,28 +206,24 @@ const SimResourceDetail: React.FC = () => {
     (reason?: string) => apiService.retireSimResource(id!, reason),
     {
       onSuccess: () => {
-        message.success('SIM retired successfully');
+        message.success(t('messages.updated', { defaultValue: 'Updated' }));
         queryClient.invalidateQueries(['simResource', id]);
         queryClient.invalidateQueries('simStatistics');
         setActionModalVisible(false);
       },
       onError: (error: any) => {
-        message.error(
-          `Failed to retire SIM: ${error.response?.data?.message || error.message}`
-        );
+        message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
       },
     }
   );
 
   const deleteMutation = useMutation(() => apiService.deleteSimResource(id!), {
     onSuccess: () => {
-      message.success('SIM deleted successfully');
+      message.success(t('messages.updated', { defaultValue: 'Updated' }));
       navigate('/sim-resources');
     },
     onError: (error: any) => {
-      message.error(
-        `Failed to delete SIM: ${error.response?.data?.message || error.message}`
-      );
+      message.error(`${t('app.error', { defaultValue: 'An error occurred.' })}: ${error.response?.data?.message || error.message}`);
     },
   });
 
@@ -409,7 +386,7 @@ const SimResourceDetail: React.FC = () => {
       });
       actions.push({
         key: 'delete',
-        label: 'Delete',
+        label: t('actions.delete', { defaultValue: 'Delete' }),
         icon: <DeleteOutlined />,
         danger: true,
         onClick: () => {
@@ -565,11 +542,11 @@ const SimResourceDetail: React.FC = () => {
   };
 
   const actionLabels = {
-    [LifecycleAction.ACTIVATE]: 'Activate',
-    [LifecycleAction.SUSPEND]: 'Suspend',
-    [LifecycleAction.TERMINATE]: 'Terminate',
-    [LifecycleAction.RELEASE]: 'Release',
-    [LifecycleAction.RETIRE]: 'Retire',
+    [LifecycleAction.ACTIVATE]: t('actions.activate', { defaultValue: 'Activate' }),
+    [LifecycleAction.SUSPEND]: t('actions.suspend', { defaultValue: 'Suspend' }),
+    [LifecycleAction.TERMINATE]: t('actions.terminate', { defaultValue: 'Terminate' }),
+    [LifecycleAction.RELEASE]: t('actions.release', { defaultValue: 'Release' }),
+    [LifecycleAction.RETIRE]: t('actions.retire', { defaultValue: 'Retire' }),
   };
 
   return (
@@ -792,7 +769,7 @@ const SimResourceDetail: React.FC = () => {
                   children: (
                     <>
                       <div>
-                        <strong>Created</strong>
+                        <strong>{t('sim.created', { defaultValue: 'Created' })}</strong>
                       </div>
                       <Typography.Text
                         type="secondary"
@@ -808,7 +785,7 @@ const SimResourceDetail: React.FC = () => {
                   children: (
                     <>
                       <div>
-                        <strong>Status: {getDisplayStatus()}</strong>
+                        <strong>{t('sim.status', { defaultValue: 'Status' })}: {getDisplayStatus()}</strong>
                       </div>
                       <Typography.Text
                         type="secondary"
@@ -824,9 +801,10 @@ const SimResourceDetail: React.FC = () => {
           </Card>
 
           {sim.resourceRelationship && sim.resourceRelationship.length > 0 && (
-            <Card
-              title={t('titles.relatedResources')}
+            <Card 
+              title={t('titles.relatedResources')} 
               style={{ marginTop: 16 }}
+              size="small"
             >
               {sim.resourceRelationship.map((rel, index) => {
                 const targetId = (rel as any)?.resource?.id;
@@ -834,7 +812,7 @@ const SimResourceDetail: React.FC = () => {
                   (rel as any)?.resource?.iccid ||
                   (rel as any)?.resource?.name ||
                   targetId ||
-                  '-';
+                  t('common.unknown', { defaultValue: 'Unknown' });
                 return (
                   <div key={index} style={{ marginBottom: 8 }}>
                     <Tag>{rel.relationshipType}</Tag>
@@ -854,18 +832,17 @@ const SimResourceDetail: React.FC = () => {
             </Card>
           )}
 
-          <Card
-            title={t('titles.allocation', { defaultValue: 'Allocation' })}
+          <Card title={t('titles.allocation', { defaultValue: 'Allocation' })}
             style={{ marginTop: 16 }}
           >
             <Descriptions column={1} bordered>
-              <Descriptions.Item label="Distributor">
+              <Descriptions.Item label={t('fields.distributor', { defaultValue: 'Distributor' })}>
                 {getRelatedPartyName('Distributor')}
               </Descriptions.Item>
-              <Descriptions.Item label="Representative">
+              <Descriptions.Item label={t('fields.representative', { defaultValue: 'Representative' })}>
                 {getRelatedPartyName('Representative')}
               </Descriptions.Item>
-              <Descriptions.Item label="Customer">
+              <Descriptions.Item label={t('fields.customer', { defaultValue: 'Customer' })}>
                 {getRelatedPartyName('Customer')}
               </Descriptions.Item>
             </Descriptions>
@@ -875,18 +852,18 @@ const SimResourceDetail: React.FC = () => {
                 <Row style={{ marginBottom: 12 }} align="middle">
                   <Col span={24}>
                     <div style={{ marginBottom: 4, fontWeight: 600 }}>
-                      Distributor
+                      {t('fields.distributor', { defaultValue: 'Distributor' })}
                     </div>
                     <Space.Compact style={{ width: '100%' }}>
                       <Input
                         style={{ width: 220 }}
-                        placeholder="ID"
+                        placeholder={t('fields.id', { defaultValue: 'ID' })}
                         value={distId}
                         onChange={(e) => setDistId(e.target.value)}
                       />
                       <Input
                         style={{ width: 260 }}
-                        placeholder="Name (optional)"
+                        placeholder={t('fields.nameOptional', { defaultValue: 'Name (optional)' })}
                         value={distName}
                         onChange={(e) => setDistName(e.target.value)}
                       />
@@ -895,13 +872,9 @@ const SimResourceDetail: React.FC = () => {
                         onChange={(v) => setDistType(v)}
                         style={{ width: 160 }}
                       >
-                        <Select.Option value="Party">Party</Select.Option>
-                        <Select.Option value="Organization">
-                          Organization
-                        </Select.Option>
-                        <Select.Option value="Individual">
-                          Individual
-                        </Select.Option>
+                        <Select.Option value="Party">{t('fields.party', { defaultValue: 'Party' })}</Select.Option>
+                        <Select.Option value="Organization">{t('fields.organization', { defaultValue: 'Organization' })}</Select.Option>
+                        <Select.Option value="Individual">{t('fields.individual', { defaultValue: 'Individual' })}</Select.Option>
                       </Select>
                       <Button
                         type="primary"
@@ -917,12 +890,12 @@ const SimResourceDetail: React.FC = () => {
                             payload
                           );
                           if (res.success) {
-                            message.success('Distributor set');
+                            message.success(t('messages.updated', { defaultValue: 'Updated' }));
                             queryClient.invalidateQueries(['simResource', id]);
                           }
                         }}
                       >
-                        Set
+                        {t('actions.set', { defaultValue: 'Set' })}
                       </Button>
                       <Button
                         danger
@@ -932,12 +905,12 @@ const SimResourceDetail: React.FC = () => {
                             'Distributor'
                           );
                           if (res.success) {
-                            message.success('Distributor cleared');
+                            message.success(t('messages.updated', { defaultValue: 'Updated' }));
                             queryClient.invalidateQueries(['simResource', id]);
                           }
                         }}
                       >
-                        Clear
+                        {t('common.clear', { defaultValue: 'Clear' })}
                       </Button>
                     </Space.Compact>
                   </Col>
@@ -946,18 +919,18 @@ const SimResourceDetail: React.FC = () => {
                 <Row style={{ marginBottom: 12 }} align="middle">
                   <Col span={24}>
                     <div style={{ marginBottom: 4, fontWeight: 600 }}>
-                      Representative
+                      {t('fields.representative', { defaultValue: 'Representative' })}
                     </div>
                     <Space.Compact style={{ width: '100%' }}>
                       <Input
                         style={{ width: 220 }}
-                        placeholder="ID"
+                        placeholder={t('fields.id', { defaultValue: 'ID' })}
                         value={repId}
                         onChange={(e) => setRepId(e.target.value)}
                       />
                       <Input
                         style={{ width: 260 }}
-                        placeholder="Name (optional)"
+                        placeholder={t('fields.nameOptional', { defaultValue: 'Name (optional)' })}
                         value={repName}
                         onChange={(e) => setRepName(e.target.value)}
                       />
@@ -966,13 +939,9 @@ const SimResourceDetail: React.FC = () => {
                         onChange={(v) => setRepType(v)}
                         style={{ width: 160 }}
                       >
-                        <Select.Option value="Party">Party</Select.Option>
-                        <Select.Option value="Organization">
-                          Organization
-                        </Select.Option>
-                        <Select.Option value="Individual">
-                          Individual
-                        </Select.Option>
+                        <Select.Option value="Party">{t('fields.party', { defaultValue: 'Party' })}</Select.Option>
+                        <Select.Option value="Organization">{t('fields.organization', { defaultValue: 'Organization' })}</Select.Option>
+                        <Select.Option value="Individual">{t('fields.individual', { defaultValue: 'Individual' })}</Select.Option>
                       </Select>
                       <Button
                         type="primary"
@@ -988,12 +957,12 @@ const SimResourceDetail: React.FC = () => {
                             payload
                           );
                           if (res.success) {
-                            message.success('Representative set');
+                            message.success(t('messages.updated', { defaultValue: 'Updated' }));
                             queryClient.invalidateQueries(['simResource', id]);
                           }
                         }}
                       >
-                        Set
+                        {t('actions.set', { defaultValue: 'Set' })}
                       </Button>
                       <Button
                         danger
@@ -1003,12 +972,12 @@ const SimResourceDetail: React.FC = () => {
                             'Representative'
                           );
                           if (res.success) {
-                            message.success('Representative cleared');
+                            message.success(t('messages.updated', { defaultValue: 'Updated' }));
                             queryClient.invalidateQueries(['simResource', id]);
                           }
                         }}
                       >
-                        Clear
+                        {t('common.clear', { defaultValue: 'Clear' })}
                       </Button>
                     </Space.Compact>
                   </Col>
@@ -1017,18 +986,18 @@ const SimResourceDetail: React.FC = () => {
                 <Row align="middle">
                   <Col span={24}>
                     <div style={{ marginBottom: 4, fontWeight: 600 }}>
-                      Customer
+                      {t('fields.customer', { defaultValue: 'Customer' })}
                     </div>
                     <Space.Compact style={{ width: '100%' }}>
                       <Input
                         style={{ width: 220 }}
-                        placeholder="ID"
+                        placeholder={t('fields.id', { defaultValue: 'ID' })}
                         value={custId}
                         onChange={(e) => setCustId(e.target.value)}
                       />
                       <Input
                         style={{ width: 260 }}
-                        placeholder="Name (optional)"
+                        placeholder={t('fields.nameOptional', { defaultValue: 'Name (optional)' })}
                         value={custName}
                         onChange={(e) => setCustName(e.target.value)}
                       />
@@ -1037,13 +1006,9 @@ const SimResourceDetail: React.FC = () => {
                         onChange={(v) => setCustType(v)}
                         style={{ width: 160 }}
                       >
-                        <Select.Option value="Party">Party</Select.Option>
-                        <Select.Option value="Organization">
-                          Organization
-                        </Select.Option>
-                        <Select.Option value="Individual">
-                          Individual
-                        </Select.Option>
+                        <Select.Option value="Party">{t('fields.party', { defaultValue: 'Party' })}</Select.Option>
+                        <Select.Option value="Organization">{t('fields.organization', { defaultValue: 'Organization' })}</Select.Option>
+                        <Select.Option value="Individual">{t('fields.individual', { defaultValue: 'Individual' })}</Select.Option>
                       </Select>
                       <Button
                         type="primary"
@@ -1059,12 +1024,12 @@ const SimResourceDetail: React.FC = () => {
                             payload
                           );
                           if (res.success) {
-                            message.success('Customer set');
+                            message.success(t('messages.updated', { defaultValue: 'Updated' }));
                             queryClient.invalidateQueries(['simResource', id]);
                           }
                         }}
                       >
-                        Set
+                        {t('actions.set', { defaultValue: 'Set' })}
                       </Button>
                       <Button
                         danger
@@ -1074,12 +1039,12 @@ const SimResourceDetail: React.FC = () => {
                             'Customer'
                           );
                           if (res.success) {
-                            message.success('Customer cleared');
+                            message.success(t('messages.updated', { defaultValue: 'Updated' }));
                             queryClient.invalidateQueries(['simResource', id]);
                           }
                         }}
                       >
-                        Clear
+                        {t('common.clear', { defaultValue: 'Clear' })}
                       </Button>
                     </Space.Compact>
                   </Col>
@@ -1092,7 +1057,7 @@ const SimResourceDetail: React.FC = () => {
 
       {/* Edit Modal */}
       <Modal
-        title="Edit SIM Resource"
+        title={t('titles.editSimResource', { defaultValue: 'Edit SIM Resource' })}
         open={editModalVisible}
         onCancel={() => setEditModalVisible(false)}
         footer={null}
@@ -1110,34 +1075,34 @@ const SimResourceDetail: React.FC = () => {
                   <>
                     <Row gutter={16}>
                       <Col xs={24} sm={12}>
-                        <Form.Item label="Name" name="name">
-                          <Input placeholder="Enter name" />
+                        <Form.Item label={t('createSim.name', { defaultValue: 'Name' })} name="name">
+                          <Input placeholder={t('placeholders.name', { defaultValue: 'Enter name' })} />
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={12}>
-                        <Form.Item label="Category" name="category">
-                          <Input placeholder="Enter category" />
+                        <Form.Item label={t('fields.category', { defaultValue: 'Category' })} name="category">
+                          <Input placeholder={t('placeholders.category', { defaultValue: 'Enter category' })} />
                         </Form.Item>
                       </Col>
                     </Row>
-                    <Form.Item label="Description" name="description">
-                      <TextArea rows={3} placeholder="Enter description" />
+                    <Form.Item label={t('common.description', { defaultValue: 'Description' })} name="description">
+                      <TextArea rows={3} placeholder={t('common.description', { defaultValue: 'Description' })} />
                     </Form.Item>
                   </>
                 ),
               },
               {
                 key: 'states',
-                label: 'States',
+                label: t('titles.states', { defaultValue: 'States' }),
                 children: (
                   <>
                     <Row gutter={16}>
                       <Col xs={24} sm={12}>
                         <Form.Item
-                          label="Resource Status"
+                          label={t('sim.status', { defaultValue: 'Status' })}
                           name="resourceStatus"
                         >
-                          <Select allowClear placeholder="Select status">
+                          <Select allowClear placeholder={t('filters.status', { defaultValue: 'Status' })}>
                             {RESOURCE_STATUS_VALUES.map((s) => (
                               <Select.Option key={s} value={s}>
                                 {s}
@@ -1148,20 +1113,16 @@ const SimResourceDetail: React.FC = () => {
                       </Col>
                       <Col xs={24} sm={12}>
                         <Form.Item
-                          label="Administrative State"
+                          label={t('fields.administrativeState', { defaultValue: 'Administrative State' })}
                           name="administrativeState"
                         >
                           <Select
                             allowClear
-                            placeholder="Select administrative state"
+                            placeholder={t('fields.administrativeState', { defaultValue: 'Administrative State' })}
                           >
                             <Select.Option value="locked">locked</Select.Option>
-                            <Select.Option value="unlocked">
-                              unlocked
-                            </Select.Option>
-                            <Select.Option value="shutdown">
-                              shutdown
-                            </Select.Option>
+                            <Select.Option value="unlocked">unlocked</Select.Option>
+                            <Select.Option value="shutdown">shutdown</Select.Option>
                           </Select>
                         </Form.Item>
                       </Col>
@@ -1169,23 +1130,21 @@ const SimResourceDetail: React.FC = () => {
                     <Row gutter={16}>
                       <Col xs={24} sm={12}>
                         <Form.Item
-                          label="Operational State"
+                          label={t('fields.operationalState', { defaultValue: 'Operational State' })}
                           name="operationalState"
                         >
                           <Select
                             allowClear
-                            placeholder="Select operational state"
+                            placeholder={t('fields.operationalState', { defaultValue: 'Operational State' })}
                           >
                             <Select.Option value="enable">enable</Select.Option>
-                            <Select.Option value="disable">
-                              disable
-                            </Select.Option>
+                            <Select.Option value="disable">disable</Select.Option>
                           </Select>
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={12}>
-                        <Form.Item label="Usage State" name="usageState">
-                          <Select allowClear placeholder="Select usage state">
+                        <Form.Item label={t('fields.usageState', { defaultValue: 'Usage State' })} name="usageState">
+                          <Select allowClear placeholder={t('fields.usageState', { defaultValue: 'Usage State' })}>
                             <Select.Option value="idle">idle</Select.Option>
                             <Select.Option value="active">active</Select.Option>
                             <Select.Option value="busy">busy</Select.Option>
@@ -1207,14 +1166,13 @@ const SimResourceDetail: React.FC = () => {
                       rules={[
                         {
                           pattern: /^\d{15}$/,
-                          message: 'IMSI must be 15 digits',
+                          message: t('validation.imsi15Digits', { defaultValue: 'IMSI must be 15 digits' }),
                         },
                       ]}
                     >
-                      <Input placeholder="Enter IMSI" />
+                      <Input placeholder={t('placeholders.imsi', { defaultValue: 'Enter IMSI' })} />
                     </Form.Item>
-
-                    <Title level={5}>Resource Characteristics</Title>
+                    <Title level={5}>{t('titles.resourceCharacteristics')}</Title>
                     <Form.List name="characteristics">
                       {(fields, { add, remove }) => (
                         <>
@@ -1232,13 +1190,13 @@ const SimResourceDetail: React.FC = () => {
                                   rules={[
                                     {
                                       required: true,
-                                      message: 'Name is required',
+                                      message: t('validation.nameRequired', { defaultValue: 'Name is required' }),
                                     },
                                   ]}
-                                  label={name === 0 ? 'Name' : undefined}
+                                  label={name === 0 ? t('createSim.name', { defaultValue: 'Name' }) : undefined}
                                   style={{ marginBottom: 0 }}
                                 >
-                                  <Input placeholder="Name (e.g., IMSI)" />
+                                  <Input placeholder={t('placeholders.nameExample', { defaultValue: 'Name (e.g., IMSI)' })} />
                                 </Form.Item>
                               </Col>
                               <Col xs={24} sm={13}>
@@ -1248,13 +1206,13 @@ const SimResourceDetail: React.FC = () => {
                                   rules={[
                                     {
                                       required: true,
-                                      message: 'Value is required',
+                                      message: t('validation.valueRequired', { defaultValue: 'Value is required' }),
                                     },
                                   ]}
-                                  label={name === 0 ? 'Value' : undefined}
+                                  label={name === 0 ? t('common.value', { defaultValue: 'Value' }) : undefined}
                                   style={{ marginBottom: 0 }}
                                 >
-                                  <Input placeholder="Value" />
+                                  <Input placeholder={t('common.value', { defaultValue: 'Value' })} />
                                 </Form.Item>
                               </Col>
                               <Col xs={24} sm={4}>
@@ -1263,19 +1221,9 @@ const SimResourceDetail: React.FC = () => {
                                   colon={false}
                                   style={{ marginBottom: 0 }}
                                 >
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      height: 32,
-                                    }}
-                                  >
-                                    <Button
-                                      danger
-                                      icon={<MinusCircleOutlined />}
-                                      onClick={() => remove(name)}
-                                    />
-                                  </div>
+                                  <Button danger size="small" onClick={() => remove(name)}>
+                                    {t('common.remove', { defaultValue: 'Remove' })}
+                                  </Button>
                                 </Form.Item>
                               </Col>
                             </Row>
@@ -1283,12 +1231,10 @@ const SimResourceDetail: React.FC = () => {
                           <Button
                             type="dashed"
                             block
-                            icon={<PlusOutlined />}
                             onClick={() => add({ valueType: 'string' })}
                           >
-                            Add Characteristic
+                            {t('actions.addCharacteristic', { defaultValue: 'Add Characteristic' })}
                           </Button>
-                          <Divider />
                         </>
                       )}
                     </Form.List>
@@ -1311,7 +1257,7 @@ const SimResourceDetail: React.FC = () => {
                             defaultValue: 'Leave blank to keep current',
                           })}
                         >
-                          <Input.Password placeholder="Enter new PIN (optional)" />
+                          <Input.Password placeholder={t('placeholders.newPinOptional', { defaultValue: 'Enter new PIN (optional)' })} />
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={12}>
@@ -1322,7 +1268,7 @@ const SimResourceDetail: React.FC = () => {
                             defaultValue: 'Leave blank to keep current',
                           })}
                         >
-                          <Input.Password placeholder="Enter new PUK1 (optional)" />
+                          <Input.Password placeholder={t('placeholders.newPuk1Optional', { defaultValue: 'Enter new PUK1 (optional)' })} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -1335,7 +1281,7 @@ const SimResourceDetail: React.FC = () => {
                             defaultValue: 'Leave blank to keep current',
                           })}
                         >
-                          <Input.Password placeholder="Enter new PUK2 (optional)" />
+                          <Input.Password placeholder={t('placeholders.newPuk2Optional', { defaultValue: 'Enter new PUK2 (optional)' })} />
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={12}>
@@ -1346,7 +1292,7 @@ const SimResourceDetail: React.FC = () => {
                             defaultValue: 'Leave blank to keep current',
                           })}
                         >
-                          <Input.Password placeholder="Enter new activation code (optional)" />
+                          <Input.Password placeholder={t('placeholders.newActivationCodeOptional', { defaultValue: 'Enter new activation code (optional)' })} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -1356,18 +1302,6 @@ const SimResourceDetail: React.FC = () => {
             ]}
           />
 
-          <div style={{ textAlign: 'right' }}>
-            <Space>
-              <Button onClick={() => setEditModalVisible(false)}>Cancel</Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={updateMutation.isLoading}
-              >
-                Update
-              </Button>
-            </Space>
-          </div>
         </Form>
       </Modal>
 
@@ -1387,7 +1321,7 @@ const SimResourceDetail: React.FC = () => {
             <Input
               value={assignMsisdn}
               onChange={(e) => setAssignMsisdn(e.target.value)}
-              placeholder="e.g., 905xxxxxxxxx"
+              placeholder={t('placeholders.msisdnExample', { defaultValue: 'e.g., 905xxxxxxxxx' })}
             />
           </Form.Item>
         </Form>
@@ -1417,16 +1351,14 @@ const SimResourceDetail: React.FC = () => {
 
       {/* Lifecycle Action Modal */}
       <Modal
-        title={`${actionLabels[selectedAction!]} SIM Resource`}
+        title={`${actionLabels[selectedAction!]} ${t('titles.simResourceDetails', { defaultValue: 'SIM Resource' })}`}
         open={actionModalVisible}
         onCancel={() => setActionModalVisible(false)}
         footer={null}
       >
         <Form layout="vertical" onFinish={handleLifecycleAction}>
           <p>
-            Are you sure you want to{' '}
-            <strong>{actionLabels[selectedAction!]?.toLowerCase()}</strong> this
-            SIM resource?
+            {t('messages.confirmActionSimResource', { action: actionLabels[selectedAction!], defaultValue: 'Are you sure you want to {{action}} this SIM resource?' })}
           </p>
 
           <div
@@ -1443,15 +1375,15 @@ const SimResourceDetail: React.FC = () => {
           {(selectedAction === LifecycleAction.SUSPEND ||
             selectedAction === LifecycleAction.TERMINATE ||
             selectedAction === LifecycleAction.RETIRE) && (
-            <Form.Item label="Reason (Optional)" name="reason">
-              <TextArea rows={3} placeholder="Enter reason for this action" />
+            <Form.Item label={t('common.reasonOptional', { defaultValue: 'Reason (Optional)' })} name="reason">
+              <TextArea rows={3} placeholder={t('placeholders.reason', { defaultValue: 'Enter reason for this action' })} />
             </Form.Item>
           )}
 
           <div style={{ textAlign: 'right' }}>
             <Space>
               <Button onClick={() => setActionModalVisible(false)}>
-                Cancel
+                {t('common.cancel', { defaultValue: 'Cancel' })}
               </Button>
               <Button
                 type="primary"

@@ -66,7 +66,7 @@ const BatchImport: React.FC = () => {
   const [useBulkTemplate, setUseBulkTemplate] = useState<boolean>(false);
   const [bulkEligibility, setBulkEligibility] = useState<{
     eligible: boolean;
-    reason?: string;
+    reasonCode?: string;
     type?: SimType;
     commonPrefix?: string;
     suffixLength?: number;
@@ -86,15 +86,16 @@ const BatchImport: React.FC = () => {
         if (response.success) {
           setImportResult(response.data!);
           setCurrentStep(2);
-          message.success(`Batch import completed. ${response.data?.successCount} SIMs imported successfully.`);
+          message.success(t('batchImport.toasts.completed', { count: response.data?.successCount }));
           queryClient.invalidateQueries('simResources');
           queryClient.invalidateQueries('simStatistics');
         } else {
-          message.error(response.error?.message || 'Failed to import SIMs');
+          message.error(response.error?.message || t('batchImport.toasts.failedImport'));
         }
       },
       onError: (error: any) => {
-        message.error(`Failed to import SIMs: ${error.response?.data?.message || error.message}`);
+        const reason = error?.response?.data?.message || error.message;
+        message.error(t('batchImport.toasts.failedImportWithReason', { reason }));
       },
     }
   );
@@ -142,20 +143,20 @@ const BatchImport: React.FC = () => {
 
       // Validation
       if (!sim.iccid) {
-        sim.errors.push('ICCID is required');
+        sim.errors.push('iccidRequired');
         sim.valid = false;
       } else if (!/^\d{19,20}$/.test(sim.iccid)) {
-        sim.errors.push('ICCID must be 19-20 digits');
+        sim.errors.push('iccidDigits');
         sim.valid = false;
       }
 
       if (!Object.values(SimType).includes(sim.type)) {
-        sim.errors.push('Invalid SIM type');
+        sim.errors.push('invalidType');
         sim.valid = false;
       }
 
       if (sim.profileType && !Object.values(ProfileType).includes(sim.profileType)) {
-        sim.errors.push('Invalid profile type');
+        sim.errors.push('invalidProfileType');
         sim.valid = false;
       }
 
@@ -171,7 +172,7 @@ const BatchImport: React.FC = () => {
     });
     parsed.forEach((s) => {
       if (s.iccid && counts[s.iccid] > 1) {
-        s.errors.push('Duplicate ICCID in file');
+        s.errors.push('duplicateIccid');
         s.valid = false;
       }
     });
@@ -182,16 +183,16 @@ const BatchImport: React.FC = () => {
   // Analyze ICCIDs to see if they can be represented by a contiguous masked range
   const analyzeEligibility = (data: ParsedSim[]) => {
     const valid = data.filter(d => d.valid);
-    if (valid.length === 0) return { eligible: false, reason: 'No valid records' } as const;
+    if (valid.length === 0) return { eligible: false, reasonCode: 'noValidRecords' } as const;
     // All ICCIDs same length and numeric
     const len = valid[0].iccid.length;
     if (!valid.every(v => v.iccid.length === len && /^\d+$/.test(v.iccid))) {
-      return { eligible: false, reason: 'ICCID lengths differ or contain non-digits' } as const;
+      return { eligible: false, reasonCode: 'lengthsDifferOrNonDigits' } as const;
     }
     // All types equal
     const type = valid[0].type;
     if (!valid.every(v => v.type === type)) {
-      return { eligible: false, reason: 'Mixed SIM types' } as const;
+      return { eligible: false, reasonCode: 'mixedSimTypes' } as const;
     }
     // Determine longest common prefix
     const iccids = valid.map(v => v.iccid);
@@ -204,20 +205,20 @@ const BatchImport: React.FC = () => {
     }
     if (prefix.length === len) {
       // all equal -> treat as non-range (not suitable for bulk mask)
-      return { eligible: false, reason: 'All ICCIDs identical' } as const;
+      return { eligible: false, reasonCode: 'allIdentical' } as const;
     }
     // Variable part is trailing digits
     const suffixes = iccids.map(id => id.slice(prefix.length));
     const suffixLen = suffixes[0].length;
     if (!suffixes.every(s => s.length === suffixLen && /^\d+$/.test(s))) {
-      return { eligible: false, reason: 'Variable part is not numeric or inconsistent' } as const;
+      return { eligible: false, reasonCode: 'variablePartInvalid' } as const;
     }
     const nums = suffixes.map(s => parseInt(s, 10));
     const set = new Set(nums);
     const min = Math.min(...nums);
     const max = Math.max(...nums);
     if (max - min + 1 !== set.size) {
-      return { eligible: false, reason: 'ICCID suffixes are not contiguous' } as const;
+      return { eligible: false, reasonCode: 'suffixesNotContiguous' } as const;
     }
     // Optional: common profile type across all or undefined
     const profiles = new Set(valid.map(v => v.profileType || '')); // '' for undefined
@@ -273,13 +274,13 @@ const BatchImport: React.FC = () => {
       if (res.success) {
         setBulkJobResult(res.data);
         setCurrentStep(2);
-        message.success('Bulk create job submitted');
+        message.success(t('batchImport.bulk.jobSubmitted'));
       } else {
-        message.error(res.error?.message || 'Bulk create failed');
+        message.error(res.error?.message || t('batchImport.bulk.createFailed', { defaultValue: 'Bulk create failed' }));
       }
     },
     onError: (err: any) => {
-      message.error(err?.response?.data?.message || err.message || 'Bulk create failed');
+      message.error(err?.response?.data?.message || err.message || t('batchImport.bulk.createFailed', { defaultValue: 'Bulk create failed' }));
     },
   });
 
@@ -294,7 +295,8 @@ const BatchImport: React.FC = () => {
         setBulkEligibility(elig as any);
       }
       if (!elig.eligible) {
-        message.error(`Bulk Template is not eligible: ${elig.reason}`);
+        const reason = (elig as any).reasonCode ? t(`batchImport.bulk.reasons.${(elig as any).reasonCode}`) : t('batchImport.bulk.notEligibleDesc');
+        message.error(t('batchImport.bulk.notEligible') + ': ' + reason);
         return;
       }
       const baseType = elig.type === SimType.ESIM ? 'LogicalResource' : 'PhysicalResource';
@@ -352,14 +354,14 @@ const BatchImport: React.FC = () => {
 
   const previewColumns = [
     {
-      title: 'Line',
+      title: t('batchImport.preview.columns.line'),
       dataIndex: 'index',
       key: 'index',
       width: 60,
       render: (_: any, __: any, index: number) => index + 1,
     },
     {
-      title: 'ICCID',
+      title: t('batchImport.preview.columns.iccid'),
       dataIndex: 'iccid',
       key: 'iccid',
       width: 200,
@@ -373,20 +375,20 @@ const BatchImport: React.FC = () => {
       ),
     },
     {
-      title: 'Type',
+      title: t('batchImport.preview.columns.type'),
       dataIndex: 'type',
       key: 'type',
       width: 100,
     },
     {
-      title: 'Profile Type',
+      title: t('batchImport.preview.columns.profileType'),
       dataIndex: 'profileType',
       key: 'profileType',
       width: 120,
       render: (type: string) => type || '-',
     },
     {
-      title: 'Status',
+      title: t('batchImport.preview.columns.status'),
       key: 'status',
       width: 80,
       render: (_: any, record: ParsedSim) => (
@@ -398,13 +400,13 @@ const BatchImport: React.FC = () => {
       ),
     },
     {
-      title: 'Errors',
+      title: t('batchImport.preview.columns.errors'),
       dataIndex: 'errors',
       key: 'errors',
       render: (errors: string[]) => (
         errors.length > 0 ? (
           <Text type="danger" style={{ fontSize: 12 }}>
-            {errors.join(', ')}
+            {errors.map(code => t(`batchImport.validationErrors.${code}`)).join(', ')}
           </Text>
         ) : null
       ),
@@ -412,10 +414,16 @@ const BatchImport: React.FC = () => {
   ];
 
   const sampleData = [
-    ['ICCID', 'Type', 'Profile Type', 'Description', 'Name'],
-    ['89014103211118510720', 'Physical', 'Prepaid', 'Sample SIM 1', 'SIM-001'],
-    ['89014103211118510721', 'eSIM', 'Postpaid', 'Sample SIM 2', 'SIM-002'],
-    ['89014103211118510722', 'Physical', '', 'Sample SIM 3', ''],
+    [
+      t('batchImport.preview.columns.iccid'),
+      t('batchImport.preview.columns.type'),
+      t('batchImport.preview.columns.profileType'),
+      t('common.description'),
+      t('createSim.name'),
+    ],
+    ['89014103211118510720', 'Physical', 'Prepaid', t('batchImport.sample.sampleSim1'), 'SIM-001'],
+    ['89014103211118510721', 'eSIM', 'Postpaid', t('batchImport.sample.sampleSim2'), 'SIM-002'],
+    ['89014103211118510722', 'Physical', '', t('batchImport.sample.sampleSim3'), ''],
   ];
 
   const steps = [
@@ -465,11 +473,11 @@ const BatchImport: React.FC = () => {
                   {t('batchImport.upload.selectFile')}
                 </Paragraph>
                 <ul>
-                  <li><strong>ICCID</strong> (required): 19-20 digit unique identifier</li>
-                  <li><strong>Type</strong> (required): Physical or eSIM</li>
-                  <li><strong>Profile Type</strong> (optional): Prepaid or Postpaid</li>
-                  <li><strong>Description</strong> (optional): SIM description</li>
-                  <li><strong>Name</strong> (optional): Human-readable name</li>
+                  <li><strong>{t('batchImport.upload.bullets.iccidLabel', { defaultValue: 'ICCID' })}</strong> {t('batchImport.upload.bullets.iccidDesc', { defaultValue: '(required): 19-20 digit unique identifier' })}</li>
+                  <li><strong>{t('batchImport.upload.bullets.typeLabel', { defaultValue: 'Type' })}</strong> {t('batchImport.upload.bullets.typeDesc', { defaultValue: '(required): Physical or eSIM' })}</li>
+                  <li><strong>{t('batchImport.upload.bullets.profileTypeLabel', { defaultValue: 'Profile Type' })}</strong> {t('batchImport.upload.bullets.profileTypeDesc', { defaultValue: '(optional): Prepaid or Postpaid' })}</li>
+                  <li><strong>{t('batchImport.upload.bullets.descriptionLabel', { defaultValue: 'Description' })}</strong> {t('batchImport.upload.bullets.descriptionDesc', { defaultValue: '(optional): SIM description' })}</li>
+                  <li><strong>{t('batchImport.upload.bullets.nameLabel', { defaultValue: 'Name' })}</strong> {t('batchImport.upload.bullets.nameDesc', { defaultValue: '(optional): Human-readable name' })}</li>
                 </ul>
 
                 <Card size="small" style={{ marginTop: 16 }} bodyStyle={{ padding: 12 }}>
@@ -493,10 +501,7 @@ const BatchImport: React.FC = () => {
                     {t('buttons.downloadSampleCsv')}
                   </CSVLink>
                   <pre style={{ marginTop: 16, fontSize: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-{`ICCID,Type,Profile Type,Description,Name
-89014103211118510720,Physical,Prepaid,Sample SIM 1,SIM-001
-89014103211118510721,eSIM,Postpaid,Sample SIM 2,SIM-002
-89014103211118510722,Physical,,Sample SIM 3,`}
+                    {t('batchImport.sample.csvExample')}
                   </pre>
                 </Card>
               </Col>
@@ -613,7 +618,7 @@ const BatchImport: React.FC = () => {
                     rules={[{ required: true, message: t('batchImport.form.batchIdRequired') }]}
                     extra={t('batchImport.form.batchIdHelp')}
                   >
-                    <Input placeholder="e.g., BATCH-2024-001" />
+                    <Input placeholder={t('placeholders.batchIdExample', { defaultValue: 'e.g., BATCH-2024-001' })} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -639,7 +644,7 @@ const BatchImport: React.FC = () => {
                       name="baseName"
                       rules={[{ required: true, message: t('batchImport.form.baseNameRequired') }]}
                     >
-                      <Input placeholder="e.g., SIM Base" />
+                      <Input placeholder={t('batchImport.placeholders.baseNameExample', { defaultValue: 'e.g., SIM Base' })} />
                     </Form.Item>
                   </Col>
                 )}
@@ -661,7 +666,12 @@ const BatchImport: React.FC = () => {
                       </ul>
                     </div>
                   ) : (
-                    <Alert type="warning" showIcon message={t('batchImport.bulk.notEligible')} description={bulkEligibility?.reason || t('batchImport.bulk.notEligibleDesc')} />
+                    <Alert
+                      type="warning"
+                      showIcon
+                      message={t('batchImport.bulk.notEligible')}
+                      description={bulkEligibility?.reasonCode ? t(`batchImport.bulk.reasons.${bulkEligibility.reasonCode}`) : t('batchImport.bulk.notEligibleDesc')}
+                    />
                   )}
                 </Card>
               )}
@@ -681,7 +691,7 @@ const BatchImport: React.FC = () => {
                   disabled={validCount === 0}
                   loading={importMutation.isLoading || bulkMutation.isLoading}
                 >
-                  {useBulkTemplate ? t('buttons.submitBulkJob') : `Import ${validCount} SIM${validCount !== 1 ? 's' : ''}`}
+                  {useBulkTemplate ? t('buttons.submitBulkJob') : t('buttons.importSimsCount', { count: validCount })}
                 </Button>
               </Space>
             </Form>

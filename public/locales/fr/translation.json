@@ -1,33 +1,76 @@
 {
   "app": {
-    "title": "SIM Inventory Management",
-    "welcome": "Welcome, {{name}}!",
-    "loading": "Loading...",
-    "error": "An error occurred."
+    "title": "Gestion de l'inventaire SIM",
+    "welcome": "Bienvenue, {{name}} !",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite."
+  },
+  "bulkTemplate": {
+    "jobSubmittedSuccess": "Tâche groupée soumise avec succès",
+    "createFailed": "Échec de la création groupée",
+    "validation": {
+      "atLeastOneCharacteristic": "Veuillez ajouter au moins une caractéristique groupée valide (name, valueFrom, valueMask, valueTo)",
+      "itemCountPositive": "Le nombre d'éléments doit être supérieur à 0",
+      "selectResourceType": "Veuillez sélectionner le type de ressource",
+      "itemCountRequired": "Le nombre d'éléments est requis"
+    },
+    "columns": {
+      "name": "Nom",
+      "valueFrom": "Valeur de début",
+      "valueMask": "Masque",
+      "valueTo": "Valeur de fin",
+      "populateToName": "Reporter dans le nom",
+      "actions": "Actions"
+    },
+    "placeholders": {
+      "nameExample": "ex. ICCID",
+      "valueFrom": "Valeur de début",
+      "valueMask": "Masque (ex. #### ou 0000)",
+      "valueTo": "Valeur de fin",
+      "baseNameRequired": "Nom de base (obligatoire)",
+      "jobReferenceOptional": "Référence de tâche (optionnel)",
+      "itemCount": "Nombre de ressources à créer"
+    },
+    "baseResource": "Ressource de base",
+    "resourceType": "Type de ressource",
+    "selectType": "Sélectionner le type",
+    "jobReference": "Référence de tâche",
+    "itemCount": "Nombre d'éléments",
+    "baseCharacteristicsLabel": "Caractéristiques de base (clé : valeur par ligne)",
+    "baseCharacteristicsExample": "Exemple:\nCatégorie: Gold\nRégion: EU",
+    "bulkCharacteristics": "Caractéristiques groupées",
+    "bulkCharacteristicsHelp": "Définissez une ou plusieurs caractéristiques de modèle à l'aide de valueFrom, valueMask et valueTo. Le backend générera les valeurs en conséquence. Le format du masque dépend du backend (ex., #### ou 0000)."
+  },
+  "errorBoundary": {
+    "title": "Une erreur est survenue",
+    "subTitle": "Une erreur inattendue s'est produite. Veuillez recharger la page ou contacter le support si le problème persiste.",
+    "reload": "Recharger la page",
+    "goToDashboard": "Aller au tableau de bord",
+    "errorDetails": "Détails de l'erreur (mode développement)"
   },
   "createSim": {
-    "title": "Create New SIM Resource",
-    "basicInformation": "Basic Information",
-    "iccidRequired": "ICCID is required",
-    "iccidDigits": "ICCID must be 19-20 digits",
-    "iccidChecksum": "Invalid ICCID checksum",
-    "simType": "SIM Type",
-    "simTypeRequired": "SIM type is required",
-    "selectSimType": "Select SIM type",
-    "profileType": "Profile Type",
-    "selectProfileType": "Select profile type (optional)",
-    "batchId": "Batch ID",
-    "batchIdHelp": "Optional batch identifier for grouping SIMs",
-    "name": "Name",
-    "nameHelp": "Optional human-readable name for the SIM",
+    "title": "Créer une ressource SIM",
+    "basicInformation": "Informations de base",
+    "iccidRequired": "ICCID requis",
+    "iccidDigits": "L'ICCID doit comporter 19–20 chiffres",
+    "iccidChecksum": "Somme de contrôle ICCID invalide",
+    "simType": "Type de SIM",
+    "simTypeRequired": "Type de SIM requis",
+    "selectSimType": "Sélectionner un type de SIM",
+    "profileType": "Type de profil",
+    "selectProfileType": "Sélectionner un type de profil (optionnel)",
+    "batchId": "ID de lot",
+    "batchIdHelp": "Identifiant de lot optionnel pour regrouper les SIM",
+    "name": "Nom",
+    "nameHelp": "Nom lisible optionnel pour la SIM",
     "description": "Description",
-    "descriptionPlaceholder": "Enter description (optional)",
-    "additionalCharacteristics": "Additional Characteristics",
-    "additionalHelp": "Enter additional characteristics as key-value pairs, one per line.",
-    "characteristicsLabel": "Resource Characteristics",
+    "descriptionPlaceholder": "Saisir une description (optionnel)",
+    "additionalCharacteristics": "Caractéristiques supplémentaires",
+    "additionalHelp": "Saisir des paires clé/valeur, une par ligne.",
+    "characteristicsLabel": "Caractéristiques de la ressource",
     "characteristicsExample": "manufacturer: Gemalto\nregion: EU\nactivation_code: ABC123",
-    "cancel": "Cancel",
-    "submit": "Create SIM Resource"
+    "cancel": "Annuler",
+    "submit": "Créer la ressource SIM"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -55,6 +98,8 @@
     "retire": "Retirer",
     "view": "Voir",
     "update": "Mettre à jour",
+    "actions": "Actions",
+    "dashed": "Pointillé",
     "setMarketplace": "Définir Marketplace",
     "reserve": "Définir Réservé",
     "dispose": "Définir Mis au rebut",
@@ -63,7 +108,11 @@
     "setRepresentative": "Définir Représentant",
     "clearRepresentative": "Effacer Représentant",
     "setCustomer": "Définir Client",
-    "clearCustomer": "Effacer Client"
+    "clearCustomer": "Effacer Client",
+    "assign": "Affecter à un compte",
+    "unassign": "Désaffecter la SIM",
+    "set": "Définir",
+    "addCharacteristic": "Ajouter une caractéristique"
   },
   "sim": {
     "iccid": "ICCID",
@@ -85,7 +134,7 @@
       "terminated": "Résiliée",
       "retired": "Retirée"
     },
-    "state": "State"
+    "state": "État"
   },
   "order": {
     "createNew": "Créer une nouvelle commande",
@@ -125,12 +174,15 @@
     "confirmCancelOrder": "Voulez-vous vraiment annuler la commande {{id}} ?",
     "orderCancelled": "Commande annulée avec succès",
     "updated": "Mis à jour",
-    "selectUnassignBehavior": "Choisissez le statut après la désaffectation :"
+    "copiedToClipboard": "Copié dans le presse-papiers",
+    "selectUnassignBehavior": "Choisissez le statut après la désaffectation :",
+    "leaveBlankToKeep": "Laisser vide pour conserver la valeur actuelle"
   },
   "titles": {
     "simResourceDetails": "Détails de la ressource SIM",
     "basicInformation": "Informations de base",
     "resourceCharacteristics": "Caractéristiques de la ressource",
+    "states": "États",
     "relatedResources": "Ressources liées",
     "activityHistory": "Historique des activités",
     "editSimResource": "Modifier la ressource SIM",
@@ -142,7 +194,9 @@
     "orderTimeline": "Chronologie de la commande",
     "relatedParties": "Parties liées",
     "quickActions": "Actions rapides",
-    "cancelOrder": "Annuler la commande"
+    "cancelOrder": "Annuler la commande",
+    "sensitiveInfo": "Informations sensibles",
+    "allocation": "Allocation"
   },
   "common": {
     "back": "Retour",
@@ -154,10 +208,34 @@
     "cancel": "Annuler",
     "empty": "Aucun élément",
     "default": "Par défaut",
-    "primary": "Principal"
+    "primary": "Principal",
+    "add": "Ajouter",
+    "remove": "Supprimer",
+    "clear": "Effacer",
+    "unknown": "Inconnu",
+    "value": "Valeur",
+    "selectedCount": "{{count}} sélectionné(s)"
+  },
+  "validation": {
+    "imsi15Digits": "L'IMSI doit comporter 15 chiffres",
+    "nameRequired": "Le nom est requis",
+    "valueRequired": "La valeur est requise"
   },
   "fields": {
-    "marketplace": "Marketplace"
+    "marketplace": "Place de marché",
+    "msisdn": "MSISDN / ID de compte",
+    "distributor": "Distributeur",
+    "representative": "Représentant",
+    "customer": "Client",
+    "id": "ID",
+    "nameOptional": "Nom (optionnel)",
+    "party": "Partie",
+    "organization": "Organisation",
+    "individual": "Individu",
+    "category": "Catégorie",
+    "administrativeState": "État administratif",
+    "operationalState": "État opérationnel",
+    "usageState": "État d'utilisation"
   },
   "status": {
     "success": "Succès",
@@ -179,12 +257,25 @@
     "createOrder": "Créer une commande",
     "import": "Importer",
     "createSimilarOrder": "Créer une commande similaire",
-    "viewAllOrders": "Voir toutes les commandes"
+    "viewAllOrders": "Voir toutes les commandes",
+    "importSimsCount_one": "Importer {{count}} SIM",
+    "importSimsCount_other": "Importer {{count}} SIM"
   },
   "placeholders": {
     "searchByIccid": "Rechercher par ICCID",
     "searchByImsi": "Rechercher par IMSI",
-    "searchOrders": "Rechercher des commandes..."
+    "searchOrders": "Rechercher des commandes...",
+    "name": "Saisir le nom",
+    "category": "Saisir la catégorie",
+    "imsi": "Saisir l'IMSI",
+    "reason": "Saisir le motif de cette action",
+    "msisdnExample": "ex. 905xxxxxxxxx",
+    "newPinOptional": "Saisir un nouveau PIN (optionnel)",
+    "newPuk1Optional": "Saisir un nouveau PUK1 (optionnel)",
+    "newPuk2Optional": "Saisir un nouveau PUK2 (optionnel)",
+    "newActivationCodeOptional": "Saisir un nouveau code d'activation (optionnel)",
+    "nameExample": "Nom (ex. IMSI)",
+    "batchIdExample": "ex. BATCH-2024-001"
   },
   "filters": {
     "status": "Statut",
@@ -197,80 +288,135 @@
     "representative": "Représentant",
     "customer": "Client",
     "orderFrom": "Commande à partir de",
-    "orderTo": "Commande jusqu'au"
+    "orderTo": "Commande jusqu'au",
+    "customCharacteristics": "Filtres de champs personnalisés"
+  },
+  "settings": {
+    "account": "Compte",
+    "user": "Utilisateur",
+    "general": "Général",
+    "language": "Langue",
+    "dateFormat": "Format de date",
+    "preferences": "Préférences",
+    "defaultSortResources": "Tri par défaut (Ressources)",
+    "defaultSortOrders": "Tri par défaut (Commandes)",
+    "newestFirst": "Plus récent d'abord",
+    "oldestFirst": "Plus ancien d'abord",
+    "sortHint": "Ces préférences peuvent être appliquées progressivement sur les écrans de liste.",
+    "mightNotApplyEverywhere": "Remarque : peut ne pas encore s'appliquer partout."
   },
   "batchImport": {
-    "title": "Batch Import SIM Resources",
+    "title": "Importer des ressources SIM par lot",
     "steps": {
-      "uploadFile": "Upload File",
-      "reviewData": "Review Data",
-      "importResults": "Import Results"
+      "uploadFile": "Téléverser un fichier",
+      "reviewData": "Vérifier les données",
+      "importResults": "Résultats d'import"
     },
     "upload": {
-      "sectionTitle": "Upload CSV File",
-      "selectFile": "Select CSV file to import",
-      "dragText": "Upload CSV",
-      "dragHint": "Only CSV files are supported. Maximum file size: 10MB"
+      "sectionTitle": "Téléverser un fichier CSV",
+      "selectFile": "Sélectionner un fichier CSV à importer",
+      "dragText": "Téléverser un CSV",
+      "dragHint": "Seuls les fichiers CSV sont pris en charge. Taille max : 10 Mo",
+      "bullets": {
+        "iccidLabel": "ICCID",
+        "iccidDesc": "(obligatoire) : identifiant unique de 19-20 chiffres",
+        "typeLabel": "Type",
+        "typeDesc": "(obligatoire) : Physique ou eSIM",
+        "profileTypeLabel": "Type de profil",
+        "profileTypeDesc": "(optionnel) : Prépayé ou Postpayé",
+        "descriptionLabel": "Description",
+        "descriptionDesc": "(optionnel) : description de la SIM",
+        "nameLabel": "Nom",
+        "nameDesc": "(optionnel) : nom lisible"
+      }
     },
     "sample": {
-      "title": "Sample CSV Format"
+      "title": "Format CSV d'exemple",
+      "csvExample": "ICCID,Type,Profile Type,Description,Name\n89014103211118510720,Physical,Prepaid,SIM d'exemple 1,SIM-001\n89014103211118510721,eSIM,Postpaid,SIM d'exemple 2,SIM-002\n89014103211118510722,Physical,,SIM d'exemple 3,",
+      "sampleSim1": "SIM d'exemple 1",
+      "sampleSim2": "SIM d'exemple 2",
+      "sampleSim3": "SIM d'exemple 3"
+    },
+    "placeholders": {
+      "baseNameExample": "ex. Base SIM"
     },
     "bulk": {
-      "jobSubmitted": "Bulk Job Submitted",
-      "jobSubmittedDesc": "The bulk create job has been submitted to the server. Review the response below.",
-      "responseTitle": "Bulk Job Response",
-      "eligibilityTitle": "Bulk Eligibility",
-      "eligibleDesc": "ICCID set is eligible for mask-based bulk creation.",
-      "notEligible": "Not eligible for bulk template",
-      "notEligibleDesc": "Please check CSV data"
+      "jobSubmitted": "Tâche groupée envoyée",
+      "jobSubmittedDesc": "La tâche de création en masse a été envoyée au serveur. Consultez la réponse ci-dessous.",
+      "responseTitle": "Réponse de la tâche groupée",
+      "eligibilityTitle": "Éligibilité à la création en masse",
+      "eligibleDesc": "L'ensemble ICCID est éligible à la création groupée basée sur masque.",
+      "notEligible": "Non éligible au modèle groupé",
+      "notEligibleDesc": "Veuillez vérifier les données CSV",
+      "createFailed": "Échec de la création groupée",
+      "reasons": {
+        "noValidRecords": "Aucun enregistrement valide",
+        "lengthsDifferOrNonDigits": "Les longueurs ICCID diffèrent ou contiennent des caractères non numériques",
+        "mixedSimTypes": "Types de SIM mixtes",
+        "allIdentical": "Tous les ICCID sont identiques",
+        "variablePartInvalid": "La partie variable n'est pas numérique ou est incohérente",
+        "suffixesNotContiguous": "Les suffixes ICCID ne sont pas contigus"
+      }
     },
     "metrics": {
-      "totalRecords": "Total Records",
-      "validRecords": "Valid Records",
-      "invalidRecords": "Invalid Records"
+      "totalRecords": "Nombre total d'enregistrements",
+      "validRecords": "Enregistrements valides",
+      "invalidRecords": "Enregistrements invalides"
     },
     "validation": {
-      "title": "Data Validation Issues",
-      "description": "{{count}} records have validation errors. Please review and fix the issues before importing."
+      "title": "Problèmes de validation des données",
+      "description": "{{count}} enregistrements présentent des erreurs. Veuillez corriger avant l'import."
+    },
+    "validationErrors": {
+      "iccidRequired": "ICCID requis",
+      "iccidDigits": "L'ICCID doit comporter 19–20 chiffres",
+      "invalidType": "Type de SIM invalide",
+      "invalidProfileType": "Type de profil invalide",
+      "duplicateIccid": "ICCID dupliqué dans le fichier"
+    },
+    "toasts": {
+      "completed": "Import par lot terminé. {{count}} SIM importées avec succès.",
+      "failedImport": "Échec de l'import des SIM",
+      "failedImportWithReason": "Échec de l'import des SIM : {{reason}}"
     },
     "preview": {
-      "title": "Data Preview",
+      "title": "Aperçu des données",
       "columns": {
-        "line": "Line",
+        "line": "Ligne",
         "iccid": "ICCID",
         "type": "Type",
-        "profileType": "Profile Type",
-        "status": "Status",
-        "errors": "Errors",
-        "error": "Error"
+        "profileType": "Type de profil",
+        "status": "Statut",
+        "errors": "Erreurs",
+        "error": "Erreur"
       }
     },
     "form": {
-      "batchId": "Batch ID",
-      "batchIdRequired": "Batch ID is required",
-      "batchIdHelp": "Unique identifier for this import batch",
-      "descriptionHelp": "Import batch description (optional)",
-      "useBulkTemplate": "Use Swagger Bulk Create (Template)",
-      "baseName": "Base Resource Name",
-      "baseNameRequired": "Base name is required for bulk job"
+      "batchId": "ID de lot",
+      "batchIdRequired": "ID de lot requis",
+      "batchIdHelp": "Identifiant unique pour ce lot d'import",
+      "descriptionHelp": "Description du lot d'import (optionnel)",
+      "useBulkTemplate": "Utiliser Swagger pour la création en masse (modèle)",
+      "baseName": "Nom de ressource de base",
+      "baseNameRequired": "Nom de base requis pour la tâche groupée"
     },
     "eligibility": {
       "type": "Type",
-      "commonPrefix": "Common Prefix",
-      "variableLength": "Variable Length",
-      "from": "From",
-      "to": "To",
-      "mask": "Mask",
-      "profileType": "ProfileType"
+      "commonPrefix": "Préfixe commun",
+      "variableLength": "Longueur variable",
+      "from": "De",
+      "to": "À",
+      "mask": "Masque",
+      "profileType": "Type de profil"
     },
     "result": {
-      "title": "Import Completed",
-      "description": "Successfully imported {{success}} out of {{total}} SIM resources.",
-      "failedTitle": "Failed Imports",
-      "totalProcessed": "Total Processed",
-      "successful": "Successful",
-      "failed": "Failed",
-      "batchId": "Batch ID"
+      "title": "Import terminé",
+      "description": "Importé avec succès {{success}} sur {{total}} ressources SIM.",
+      "failedTitle": "Échecs d'import",
+      "totalProcessed": "Total traité",
+      "successful": "Réussis",
+      "failed": "Échecs",
+      "batchId": "ID de lot"
     }
   },
   "dashboard": {
@@ -347,15 +493,17 @@
     "tagBorderStrength": "Intensité de bordure (%)",
     "tagLightnessHint": "Ajustez l'intensité des variantes claires pour le fond/la bordure des étiquettes.",
     "tagPalette": "Palette d'étiquettes",
-    "successColor": "Success Color",
-    "warningColor": "Warning Color",
-    "errorColor": "Error Color",
-    "infoColor": "Info Color"
+    "successColor": "Couleur de succès",
+    "warningColor": "Couleur d'avertissement",
+    "errorColor": "Couleur d'erreur",
+    "infoColor": "Couleur d'information"
   },
   "lang": {
     "en": "English",
     "tr": "Turkish",
     "de": "German",
-    "fr": "French"
+    "fr": "French",
+    "ar": "Arabe",
+    "zh": "Chinois"
   }
 }

@@ -248,6 +248,8 @@ const MainLayout: React.FC = () => {
                   { key: 'tr', label: t('lang.tr') },
                   { key: 'de', label: t('lang.de') },
                   { key: 'fr', label: t('lang.fr') },
+                  { key: 'ar', label: t('lang.ar', { defaultValue: 'Arabic' }) },
+                  { key: 'zh', label: t('lang.zh', { defaultValue: 'Chinese' }) },
                 ],
                 onClick: ({ key }) => i18n.changeLanguage(key),
               }}

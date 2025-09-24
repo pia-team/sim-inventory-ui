@@ -118,7 +118,7 @@ const SimOrderDetail: React.FC = () => {
   if (isPending(order) && hasRole('sim_admin')) {
     orderActions.push({
       key: 'cancel',
-      label: 'Cancel Order',
+      label: t('titles.cancelOrder', { defaultValue: 'Cancel Order' }),
       icon: <StopOutlined />,
       danger: true,
       onClick: handleCancelOrder,
@@ -127,7 +127,7 @@ const SimOrderDetail: React.FC = () => {
 
   const orderItemColumns = [
     {
-      title: 'Resource',
+      title: t('order.columns.resource', { defaultValue: 'Resource' }),
       key: 'resource',
       render: (_: any, record: any) => (
         <div>
@@ -143,7 +143,7 @@ const SimOrderDetail: React.FC = () => {
       ),
     },
     {
-      title: 'Action',
+      title: t('order.columns.action', { defaultValue: 'Action' }),
       dataIndex: 'action',
       key: 'action',
       render: (action: LifecycleAction) => (
@@ -151,7 +151,7 @@ const SimOrderDetail: React.FC = () => {
       ),
     },
     {
-      title: 'Status',
+      title: t('order.columns.resourceStatus', { defaultValue: 'Resource Status' }),
       key: 'status',
       render: (_: any, record: any) => {
         const status = record.resource?.resourceStatus || record.resource?.status;
@@ -159,7 +159,7 @@ const SimOrderDetail: React.FC = () => {
       },
     },
     {
-      title: 'State',
+      title: t('order.columns.state', { defaultValue: 'State' }),
       key: 'state',
       render: (_: any, record: any) => {
         const state = getChar(record.resource, 'RESOURCE_STATE');
@@ -167,19 +167,19 @@ const SimOrderDetail: React.FC = () => {
       },
     },
     {
-      title: 'Quantity',
+      title: t('order.columns.quantity', { defaultValue: 'Quantity' }),
       dataIndex: 'quantity',
       key: 'quantity',
       width: 80,
     },
     {
-      title: 'State',
+      title: t('order.columns.state', { defaultValue: 'State' }),
       dataIndex: 'state',
       key: 'state',
       render: (state: string) => state || 'Pending',
     },
     {
-      title: 'Actions',
+      title: t('order.columns.actions', { defaultValue: 'Actions' }),
       key: 'actions',
       width: 60,
       render: (_: any, record: any) => (
@@ -200,7 +200,7 @@ const SimOrderDetail: React.FC = () => {
       color: 'blue',
       children: (
         <>
-          <div><strong>Order Created</strong></div>
+          <div><strong>{t('order.timeline.created', { defaultValue: 'Order Created' })}</strong></div>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {formatDateTime(order.orderDate)}
           </Text>

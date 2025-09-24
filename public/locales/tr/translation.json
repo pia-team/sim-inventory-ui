@@ -5,6 +5,13 @@
     "loading": "Yükleniyor...",
     "error": "Bir hata oluştu."
   },
+  "errorBoundary": {
+    "title": "Bir şeyler yanlış gitti",
+    "subTitle": "Beklenmeyen bir hata oluştu. Sayfayı yenilemeyi deneyin ya da sorun devam ederse destek ile iletişime geçin.",
+    "reload": "Sayfayı Yenile",
+    "goToDashboard": "Gösterge Paneline Git",
+    "errorDetails": "Hata Ayrıntıları (Geliştirme Modu)"
+  },
   "createSim": {
     "title": "Yeni SIM Kaynağı Oluştur",
     "basicInformation": "Temel Bilgiler",
@@ -55,6 +62,8 @@
     "retire": "Emekli Et",
     "view": "Görüntüle",
     "update": "Güncelle",
+    "actions": "İşlemler",
+    "dashed": "Kesikli",
     "setMarketplace": "Pazar Yerini Ayarla",
     "reserve": "Rezerveye Ayarla",
     "dispose": "İmhaya Ayarla",
@@ -63,7 +72,11 @@
     "setRepresentative": "Temsilci Ata",
     "clearRepresentative": "Temsilciyi Temizle",
     "setCustomer": "Müşteri Ata",
-    "clearCustomer": "Müşteriyi Temizle"
+    "clearCustomer": "Müşteriyi Temizle",
+    "assign": "Hesaba Ata",
+    "unassign": "SIM Atamasını Kaldır",
+    "set": "Ayarla",
+    "addCharacteristic": "Özellik Ekle"
   },
   "sim": {
     "iccid": "ICCID",
@@ -85,7 +98,7 @@
       "terminated": "Sonlandırıldı",
       "retired": "Emekli"
     },
-    "state": "State"
+    "state": "Aşama"
   },
   "order": {
     "createNew": "Yeni Sipariş Oluştur",
@@ -107,7 +120,7 @@
       "action": "İşlem",
       "resourceStatus": "Kaynak Durumu",
       "quantity": "Adet",
-      "state": "Durum",
+      "state": "Aşama",
       "actions": "İşlemler"
     },
     "timeline": {
@@ -125,12 +138,15 @@
     "confirmCancelOrder": "{{id}} numaralı siparişi iptal etmek istediğinize emin misiniz?",
     "orderCancelled": "Sipariş başarıyla iptal edildi",
     "updated": "Güncellendi",
-    "selectUnassignBehavior": "Atamayı kaldırdıktan sonra oluşacak durumu seçin:"
+    "copiedToClipboard": "Panoya kopyalandı",
+    "selectUnassignBehavior": "Atamayı kaldırdıktan sonra oluşacak durumu seçin:",
+    "leaveBlankToKeep": "Mevcut değeri korumak için boş bırakın"
   },
   "titles": {
     "simResourceDetails": "SIM Kaynağı Detayları",
     "basicInformation": "Temel Bilgiler",
     "resourceCharacteristics": "Kaynak Özellikleri",
+    "states": "Durumlar",
     "relatedResources": "İlgili Kaynaklar",
     "activityHistory": "Aktivite Geçmişi",
     "editSimResource": "SIM Kaynağını Düzenle",
@@ -142,7 +158,9 @@
     "orderTimeline": "Sipariş Zaman Çizelgesi",
     "relatedParties": "İlgili Taraflar",
     "quickActions": "Hızlı İşlemler",
-    "cancelOrder": "Siparişi İptal Et"
+    "cancelOrder": "Siparişi İptal Et",
+    "sensitiveInfo": "Gizli Bilgiler",
+    "allocation": "Tahsis"
   },
   "common": {
     "back": "Geri",
@@ -154,10 +172,34 @@
     "cancel": "Vazgeç",
     "empty": "Kayıt yok",
     "default": "Varsayılan",
-    "primary": "Birincil"
+    "primary": "Birincil",
+    "add": "Ekle",
+    "remove": "Kaldır",
+    "clear": "Temizle",
+    "unknown": "Bilinmiyor",
+    "value": "Değer",
+    "selectedCount": "{{count}} seçildi"
+  },
+  "validation": {
+    "imsi15Digits": "IMSI 15 haneli olmalıdır",
+    "nameRequired": "Ad zorunludur",
+    "valueRequired": "Değer zorunludur"
   },
   "fields": {
-    "marketplace": "Pazar Yeri"
+    "marketplace": "Pazar Yeri",
+    "msisdn": "MSISDN / Hesap ID",
+    "distributor": "Distribütör",
+    "representative": "Temsilci",
+    "customer": "Müşteri",
+    "id": "ID",
+    "nameOptional": "Ad (opsiyonel)",
+    "party": "Taraf",
+    "organization": "Organizasyon",
+    "individual": "Bireysel",
+    "category": "Kategori",
+    "administrativeState": "Yönetim Durumu",
+    "operationalState": "Operasyonel Durum",
+    "usageState": "Kullanım Durumu"
   },
   "status": {
     "success": "Başarılı",
@@ -179,12 +221,25 @@
     "createOrder": "Sipariş Oluştur",
     "import": "İçe Aktar",
     "createSimilarOrder": "Benzer Sipariş Oluştur",
-    "viewAllOrders": "Tüm Siparişleri Gör"
+    "viewAllOrders": "Tüm Siparişleri Gör",
+    "importSimsCount_one": "{{count}} SIM içe aktar",
+    "importSimsCount_other": "{{count}} SIM içe aktar"
   },
   "placeholders": {
     "searchByIccid": "ICCID ile ara",
     "searchByImsi": "IMSI ile ara",
-    "searchOrders": "Siparişlerde ara..."
+    "searchOrders": "Siparişlerde ara...",
+    "name": "Ad girin",
+    "category": "Kategori girin",
+    "imsi": "IMSI girin",
+    "reason": "Bu işlem için gerekçe girin",
+    "msisdnExample": "örn. 905xxxxxxxxx",
+    "newPinOptional": "Yeni PIN girin (opsiyonel)",
+    "newPuk1Optional": "Yeni PUK1 girin (opsiyonel)",
+    "newPuk2Optional": "Yeni PUK2 girin (opsiyonel)",
+    "newActivationCodeOptional": "Yeni aktivasyon kodu girin (opsiyonel)",
+    "nameExample": "Ad (örn. IMSI)",
+    "batchIdExample": "örn. BATCH-2024-001"
   },
   "filters": {
     "status": "Durum",
@@ -197,7 +252,22 @@
     "representative": "Temsilci",
     "customer": "Müşteri",
     "orderFrom": "Sipariş Başlangıç",
-    "orderTo": "Sipariş Bitiş"
+    "orderTo": "Sipariş Bitiş",
+    "customCharacteristics": "Özel Alan Filtreleri"
+  },
+  "settings": {
+    "account": "Hesap",
+    "user": "Kullanıcı",
+    "general": "Genel",
+    "language": "Dil",
+    "dateFormat": "Tarih formatı",
+    "preferences": "Tercihler",
+    "defaultSortResources": "Varsayılan sıralama (Kaynaklar)",
+    "defaultSortOrders": "Varsayılan sıralama (Siparişler)",
+    "newestFirst": "En yeni ilk",
+    "oldestFirst": "En eski ilk",
+    "sortHint": "Bu tercihler liste ekranlarına aşamalı olarak uygulanabilir.",
+    "mightNotApplyEverywhere": "Not: her yerde henüz geçerli olmayabilir."
   },
   "batchImport": {
     "title": "Toplu SIM Kaynağı İçe Aktarma",
@@ -210,10 +280,26 @@
       "sectionTitle": "CSV Dosyası Yükle",
       "selectFile": "İçe aktarılacak CSV dosyasını seçin",
       "dragText": "CSV Yükle",
-      "dragHint": "Yalnızca CSV dosyaları desteklenir. Maksimum dosya boyutu: 10MB"
+      "dragHint": "Yalnızca CSV dosyaları desteklenir. Maksimum dosya boyutu: 10MB",
+      "bullets": {
+        "iccidLabel": "ICCID",
+        "iccidDesc": "(zorunlu): 19-20 haneli benzersiz tanımlayıcı",
+        "typeLabel": "Tür",
+        "typeDesc": "(zorunlu): Fiziksel veya eSIM",
+        "profileTypeLabel": "Profil Tipi",
+        "profileTypeDesc": "(opsiyonel): Ön ödemeli veya Faturalı",
+        "descriptionLabel": "Açıklama",
+        "descriptionDesc": "(opsiyonel): SIM açıklaması",
+        "nameLabel": "Ad",
+        "nameDesc": "(opsiyonel): Okunabilir ad"
+      }
     },
     "sample": {
-      "title": "Örnek CSV Formatı"
+      "title": "Örnek CSV Formatı",
+      "csvExample": "ICCID,Type,Profile Type,Description,Name\n89014103211118510720,Physical,Prepaid,Örnek SIM 1,SIM-001\n89014103211118510721,eSIM,Postpaid,Örnek SIM 2,SIM-002\n89014103211118510722,Physical,,Örnek SIM 3,",
+      "sampleSim1": "Örnek SIM 1",
+      "sampleSim2": "Örnek SIM 2",
+      "sampleSim3": "Örnek SIM 3"
     },
     "bulk": {
       "jobSubmitted": "Toplu Görev Gönderildi",
@@ -222,7 +308,19 @@
       "eligibilityTitle": "Toplu Uygunluk",
       "eligibleDesc": "ICCID kümesi maske tabanlı toplu oluşturma için uygundur.",
       "notEligible": "Toplu şablon için uygun değil",
-      "notEligibleDesc": "Lütfen CSV verisini kontrol edin"
+      "notEligibleDesc": "Lütfen CSV verisini kontrol edin",
+      "createFailed": "Toplu oluşturma başarısız",
+      "reasons": {
+        "noValidRecords": "Geçerli kayıt yok",
+        "lengthsDifferOrNonDigits": "ICCID uzunlukları farklı veya rakam dışı karakter içeriyor",
+        "mixedSimTypes": "Karışık SIM türleri",
+        "allIdentical": "Tüm ICCID'ler aynı",
+        "variablePartInvalid": "Değişken kısım sayısal değil veya tutarsız",
+        "suffixesNotContiguous": "ICCID son ekleri bitişik değil"
+      }
+    },
+    "placeholders": {
+      "baseNameExample": "örn. SIM Temel"
     },
     "metrics": {
       "totalRecords": "Toplam Kayıt",
@@ -232,6 +330,18 @@
     "validation": {
       "title": "Veri Doğrulama Sorunları",
       "description": "{{count}} kayıt doğrulama hatalarına sahip. Lütfen içe aktarmadan önce sorunları inceleyip düzeltin."
+    },
+    "validationErrors": {
+      "iccidRequired": "ICCID zorunludur",
+      "iccidDigits": "ICCID 19-20 hane olmalıdır",
+      "invalidType": "Geçersiz SIM türü",
+      "invalidProfileType": "Geçersiz profil tipi",
+      "duplicateIccid": "Dosyada yinelenen ICCID"
+    },
+    "toasts": {
+      "completed": "Toplu içe aktarma tamamlandı. {{count}} SIM başarıyla içe aktarıldı.",
+      "failedImport": "SIM içe aktarma başarısız",
+      "failedImportWithReason": "SIM içe aktarma başarısız: {{reason}}"
     },
     "preview": {
       "title": "Veri Önizleme",
@@ -273,6 +383,42 @@
       "batchId": "Batch ID"
     }
   },
+  "bulkTemplate": {
+    "jobSubmittedSuccess": "Toplu oluşturma görevi başarıyla gönderildi",
+    "createFailed": "Toplu oluşturma başarısız",
+    "validation": {
+      "atLeastOneCharacteristic": "Lütfen en az bir geçerli Toplu Özellik ekleyin (name, valueFrom, valueMask, valueTo)",
+      "itemCountPositive": "Öğe sayısı 0'dan büyük olmalıdır",
+      "selectResourceType": "Lütfen kaynak türünü seçin",
+      "itemCountRequired": "Öğe sayısı zorunludur"
+    },
+    "columns": {
+      "name": "Ad",
+      "valueFrom": "Başlangıç Değeri",
+      "valueMask": "Maske",
+      "valueTo": "Bitiş Değeri",
+      "populateToName": "Ada yaz",
+      "actions": "İşlemler"
+    },
+    "placeholders": {
+      "nameExample": "örn. ICCID",
+      "valueFrom": "Başlangıç değeri",
+      "valueMask": "Maske (örn., #### veya 0000)",
+      "valueTo": "Bitiş değeri",
+      "baseNameRequired": "Temel ad (zorunlu)",
+      "jobReferenceOptional": "Opsiyonel iş referansı",
+      "itemCount": "Oluşturulacak kaynak sayısı"
+    },
+    "baseResource": "Temel Kaynak",
+    "resourceType": "Kaynak Türü",
+    "selectType": "Tür seçin",
+    "jobReference": "İş Referansı",
+    "itemCount": "Öğe Sayısı",
+    "baseCharacteristicsLabel": "Temel Özellikler (anahtar: değer her satıra)",
+    "baseCharacteristicsExample": "Örnek:\nKategori: Gold\nBölge: EU",
+    "bulkCharacteristics": "Toplu Özellikler",
+    "bulkCharacteristicsHelp": "valueFrom, valueMask ve valueTo kullanarak bir veya daha fazla şablon özellik tanımlayın. Sunucu buna göre değer üretecektir. Maske formatı sunucuya özeldir (örn., #### veya 0000)."
+  },
   "dashboard": {
     "totalSims": "Toplam SIM",
     "available": "Uygun",
@@ -281,7 +427,7 @@
     "reserved": "Rezerve",
     "inUse": "Kullanımda",
     "disposed": "İmha",
-    "stateDistribution": "Durum Dağılımı",
+    "stateDistribution": "Aşama Dağılımı",
     "statusDistribution": "SIM Durum Dağılımı",
     "recentBatches": "Son Partiler",
     "recentSimActivity": "Son SIM Aktivitesi",
@@ -356,6 +502,8 @@
     "en": "İngilizce",
     "tr": "Türkçe",
     "de": "Almanca",
-    "fr": "Fransızca"
+    "fr": "Fransızca",
+    "ar": "Arapça",
+    "zh": "Çince"
   }
 }
