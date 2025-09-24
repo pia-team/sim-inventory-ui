@@ -112,7 +112,8 @@
     "assign": "Konto zuordnen",
     "unassign": "Zuordnung aufheben",
     "set": "Setzen",
-    "addCharacteristic": "Merkmal hinzufügen"
+    "addCharacteristic": "Merkmal hinzufügen",
+    "clearAll": "Clear All"
   },
   "sim": {
     "iccid": "ICCID",
@@ -161,7 +162,14 @@
     },
     "timeline": {
       "created": "Auftrag erstellt"
-    }
+    },
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low",
+    "summary": "Order Summary",
+    "searchAndAdd": "Search and Add SIMs",
+    "searchResultsCount": "{{count}} result(s)",
+    "searchHint": "Search for SIMs to add to order"
   },
   "messages": {
     "success": "Vorgang erfolgreich abgeschlossen.",
@@ -505,5 +513,14 @@
     "fr": "French",
     "ar": "Arabisch",
     "zh": "Chinesisch"
+  },
+  "createOrder": {
+    "validation": {
+      "iccidDigits": "Please enter at least 10 digits for ICCID",
+      "imsiDigits": "Please enter at least 6 digits for IMSI",
+      "msisdnDigits": "Please enter a valid MSISDN (min 7 digits)"
+    },
+    "alreadyAdded": "SIM already added to order",
+    "notEligible": "Not eligible (status: {{status}})"
   }
 }
